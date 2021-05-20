@@ -14,6 +14,15 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
+### `yarn start-server`
+
+Runs the backend server.\
+Server is listened at [http://localhost:5000](http://localhost:5000).
+
+### `yarn start-all`
+
+Start `yarn start-server` and `yarn start`.
+
 ### `yarn test`
 
 Launches the test runner in the interactive watch mode.\
