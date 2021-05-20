@@ -2,7 +2,6 @@ export interface IAdministrator {
     id?: number;
     fio: string;
     login: string;
-    password: string;
 }
 
 // *** ACTION TYPES ***
@@ -46,7 +45,7 @@ export const deleteAdministratorAction: deleteAdministratorActionType = () => {
 };
 
 // *** INITIAL STATE ***
-export type IngredientStateType = IAdministrator;
+export type AdministratorStateType = IAdministrator;
 const initialState: IAdministrator | null = null;
 
 // *** REDUCER ***

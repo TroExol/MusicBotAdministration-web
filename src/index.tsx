@@ -4,25 +4,30 @@ import './index.css';
 
 import { BrowserRouter } from 'react-router-dom';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
+import { Provider } from 'react-redux';
+import { SnackbarProvider } from 'notistack';
 
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import store from './store';
 
 const theme = createMuiTheme({
     palette: {
-        primary: { main: '#e4fbff', light: '#edeef7' },
-        secondary: { main: '#7868e6', light: '#b8b5ff' },
+        primary: { main: '#cbf1f5', light: '#e3fdfd' },
+        secondary: { main: '#71c9ce', light: '#a6e3e9' },
     },
 });
 
 ReactDOM.render(
-    <React.StrictMode>
+    <Provider store={store}>
         <ThemeProvider theme={theme}>
-            <BrowserRouter>
-                <App />
-            </BrowserRouter>
+            <SnackbarProvider maxSnack={5} autoHideDuration={3000}>
+                <BrowserRouter>
+                    <App />
+                </BrowserRouter>
+            </SnackbarProvider>
         </ThemeProvider>
-    </React.StrictMode>,
+    </Provider>,
     document.getElementById('root'),
 );
 
