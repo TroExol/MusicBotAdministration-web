@@ -1,5 +1,8 @@
 import React from 'react';
 import { createStyles, makeStyles, Theme, Typography } from '@material-ui/core';
+import { connect } from 'react-redux';
+
+import { StoreType } from '../../store';
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -15,14 +18,28 @@ const useStyles = makeStyles((theme: Theme) =>
     }),
 );
 
-const Footer = (): JSX.Element => {
+interface IProps {
+    administrator: StoreType['administrator'];
+}
+
+const Footer = (props: IProps): JSX.Element => {
+    const { administrator } = props;
+
     const classes = useStyles();
 
     return (
         <div className={classes.root}>
-            <Typography>All Rights Reserved</Typography>
+            <Typography>
+                {administrator.login} {administrator.fio}
+            </Typography>
         </div>
     );
 };
 
-export default Footer;
+const mapStateToProps = (state: StoreType) => {
+    return {
+        administrator: state.administrator,
+    };
+};
+
+export default connect(mapStateToProps)(Footer);
