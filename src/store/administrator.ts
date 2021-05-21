@@ -6,6 +6,7 @@ export interface IAdministrator {
     id?: number;
     fio?: string;
     login?: string;
+    password?: string;
 }
 
 // *** ACTION TYPES ***
@@ -52,9 +53,38 @@ export const getAdministratorAction: getAdministratorActionType = async ({ login
                       id: administrator[0].ID,
                       login: administrator[0].Логин,
                       fio: administrator[0].ФИО,
+                      password: administrator[0].Пароль,
                   },
               ]
             : [false, 'Неправильно указаны данные авторизации'];
+    } catch (e) {
+        return [false, 'Не удалось получить информацию с сервера'];
+    }
+};
+
+// Change password
+export type changePasswordActionType = ({
+    id,
+    newPassword,
+}: {
+    id: number | null;
+    newPassword: string;
+}) => Promise<[true, { password: string }] | [false, string]>;
+
+export const changePasswordAction: changePasswordActionType = async ({ id, newPassword }) => {
+    try {
+        const result = await axios.put(URLS.admin, {
+            params: {
+                id,
+                newPassword,
+            },
+        });
+
+        if (result.data.rowsAffected?.[0] > 0) {
+            return [true, { password: newPassword }];
+        }
+
+        return [false, 'Не удалось обновить пароль'];
     } catch (e) {
         return [false, 'Не удалось получить информацию с сервера'];
     }

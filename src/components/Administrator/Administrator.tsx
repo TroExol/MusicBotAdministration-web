@@ -63,6 +63,7 @@ const Administrator = (props: IProps): JSX.Element => {
 
     const handleChangePasswordClick = () => {
         setOpenChangePasswordState(() => true);
+        handleUserClose();
     };
 
     const handleChangePasswordClose = () => {
@@ -71,6 +72,7 @@ const Administrator = (props: IProps): JSX.Element => {
 
     const handleExitConfirmationClick = () => {
         setOpenExitConfirmationState(() => true);
+        handleUserClose();
     };
 
     const handleExitConfirmationClose = () => {
