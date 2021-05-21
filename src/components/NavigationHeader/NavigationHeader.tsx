@@ -2,7 +2,9 @@ import React from 'react';
 import { Button, createStyles, makeStyles, Theme, useTheme } from '@material-ui/core';
 import { HomeOutlined } from '@material-ui/icons';
 import { useHistory } from 'react-router-dom';
+
 import constants from '../../common/constants';
+import Administrator from '../Administrator/Administrator';
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -21,6 +23,11 @@ const useStyles = makeStyles((theme: Theme) =>
             padding: '10px 20px',
             boxSizing: 'border-box',
         },
+        routes: {
+            '& > *:not(:first-child)': {
+                marginLeft: '15px',
+            },
+        },
     }),
 );
 
@@ -32,9 +39,13 @@ const NavigationHeader = (): JSX.Element => {
     return (
         <div className={classes.root}>
             <div className={classes.content}>
-                <Button color="secondary" variant="contained" onClick={() => history.push('/')}>
-                    <HomeOutlined style={{ color: theme.palette.primary.light }} />
-                </Button>
+                <div className={classes.routes}>
+                    <Button color="secondary" variant="contained" onClick={() => history.push('/')}>
+                        <HomeOutlined style={{ color: theme.palette.primary.light }} />
+                    </Button>
+                </div>
+
+                <Administrator />
             </div>
         </div>
     );
