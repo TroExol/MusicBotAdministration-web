@@ -2,6 +2,16 @@ import React from 'react';
 import { Typography, TextField, Button } from '@material-ui/core';
 import { createStyles, makeStyles } from '@material-ui/core/styles';
 import { useForm, Controller } from 'react-hook-form';
+import { connect } from 'react-redux';
+import { useSnackbar } from 'notistack';
+import { StoreDispatchType, StoreType } from '../../store';
+
+import {
+    addAdministratorAction,
+    addAdministratorActionType,
+    changePasswordAction,
+    IAdministrator,
+} from '../../store/administrator';
 
 const useStyles = makeStyles((theme) => {
     return createStyles({
@@ -27,15 +37,55 @@ const useStyles = makeStyles((theme) => {
     });
 });
 
-const PasswordEdit = (): JSX.Element => {
+interface IProps {
+    administrator: StoreType['administrator'];
+    addAdministrator: addAdministratorActionType;
+}
+
+const PasswordEdit = (props: IProps): JSX.Element => {
+    const { administrator, addAdministrator } = props;
+
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const classes = useStyles();
     const { handleSubmit, control, formState, getValues } = useForm();
 
-    // const [oldPassword, setOldPassword];
+    const onSubmitHandler = async (data: {
+        oldPassword: string;
+        newPassword: string;
+        newPasswordRepeat: string;
+    }) => {
+        if (!administrator.id) {
+            const snackBar = enqueueSnackbar('Что-то пошло не так. Попробуйте обновить страницу', {
+                variant: 'error',
+                anchorOrigin: { horizontal: 'right', vertical: 'top' },
+                onClick: () => closeSnackbar(snackBar),
+            });
 
-    const onSubmitHandler = (data: { name: string; phoneNumber: string }) => {
-        console.log(data);
-        // onSuccessConfirm();
+            return;
+        }
+
+        const resultTuple = await changePasswordAction({
+            id: administrator.id,
+            newPassword: data.newPassword,
+        });
+
+        if (resultTuple[0]) {
+            addAdministrator({
+                administrator: { ...administrator, password: resultTuple[1].password },
+            });
+
+            const snackBar = enqueueSnackbar('Пароль успешно изменен', {
+                variant: 'success',
+                anchorOrigin: { horizontal: 'right', vertical: 'top' },
+                onClick: () => closeSnackbar(snackBar),
+            });
+        } else {
+            const snackBar = enqueueSnackbar(resultTuple[1], {
+                variant: 'error',
+                anchorOrigin: { horizontal: 'right', vertical: 'top' },
+                onClick: () => closeSnackbar(snackBar),
+            });
+        }
     };
 
     return (
@@ -59,7 +109,11 @@ const PasswordEdit = (): JSX.Element => {
                 )}
                 name="oldPassword"
                 control={control}
-                rules={{ required: { value: true, message: 'Введите старый пароль' } }}
+                rules={{
+                    required: { value: true, message: 'Введите старый пароль' },
+                    validate: (value) =>
+                        administrator.password === value ? true : 'Старый пароль указан неверно',
+                }}
                 defaultValue=""
             />
 
@@ -118,4 +172,17 @@ const PasswordEdit = (): JSX.Element => {
     );
 };
 
-export default PasswordEdit;
+const mapStateToProps = (state: StoreType) => {
+    return {
+        administrator: state.administrator,
+    };
+};
+
+const mapDispatchToProps = (dispatch: StoreDispatchType) => {
+    return {
+        addAdministrator: ({ administrator }: { administrator: IAdministrator }) =>
+            dispatch(addAdministratorAction({ administrator })),
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(PasswordEdit);
