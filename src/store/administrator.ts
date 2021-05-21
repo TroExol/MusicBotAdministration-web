@@ -1,7 +1,11 @@
+import axios from 'axios';
+
+import { URLS } from '../common/constants';
+
 export interface IAdministrator {
     id?: number;
-    fio: string;
-    login: string;
+    fio?: string;
+    login?: string;
 }
 
 // *** ACTION TYPES ***
@@ -21,6 +25,41 @@ interface IDeleteAdministratorAction {
 type ActionTypes = IAddAdministratorAction | IDeleteAdministratorAction;
 
 // *** ACTIONS ***
+// Get Administrator
+export type getAdministratorActionType = ({
+    login,
+    password,
+}: {
+    login: string;
+    password: string;
+}) => Promise<[true, IAdministrator] | [false, string]>;
+
+export const getAdministratorAction: getAdministratorActionType = async ({ login, password }) => {
+    try {
+        const res = await axios.get(URLS.admin, {
+            params: {
+                login,
+                password,
+            },
+        });
+
+        const administrator = res.data.recordset;
+
+        return administrator.length > 0
+            ? [
+                  true,
+                  {
+                      id: administrator[0].ID,
+                      login: administrator[0].Логин,
+                      fio: administrator[0].ФИО,
+                  },
+              ]
+            : [false, 'Неправильно указаны данные авторизации'];
+    } catch (e) {
+        return [false, 'Не удалось получить информацию с сервера'];
+    }
+};
+
 // Add Administrator
 export type addAdministratorActionType = ({
     administrator,
@@ -46,10 +85,10 @@ export const deleteAdministratorAction: deleteAdministratorActionType = () => {
 
 // *** INITIAL STATE ***
 export type AdministratorStateType = IAdministrator;
-const initialState: IAdministrator | null = null;
+const initialState: AdministratorStateType = {};
 
 // *** REDUCER ***
-const reducer = (state = initialState, action: ActionTypes): IAdministrator | null => {
+const reducer = (state = initialState, action: ActionTypes): AdministratorStateType => {
     switch (action.type) {
         case 'ADD_ADMINISTRATOR': {
             return action.administrator;

@@ -9,9 +9,9 @@ import { StoreDispatchType } from '../../store';
 import {
     addAdministratorAction,
     addAdministratorActionType,
+    getAdministratorAction,
     IAdministrator,
 } from '../../store/administrator';
-import { getAdministrator } from '../../utils/database';
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -67,7 +67,7 @@ const Auth = (props: IProps): JSX.Element => {
     };
 
     const onSubmitHandler = async ({ login, password }: { login: string; password: string }) => {
-        const administratorTuple = await getAdministrator({ login, password });
+        const administratorTuple = await getAdministratorAction({ login, password });
 
         if (administratorTuple[0]) {
             onSuccessConfirmationHandler(administratorTuple[1]);

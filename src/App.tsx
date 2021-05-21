@@ -14,7 +14,7 @@ interface IProps {
 const App = (props: IProps): JSX.Element => {
     const { administrator } = props;
 
-    return administrator !== null ? (
+    return Object.keys(administrator).length !== 0 ? (
         <div className="App">
             <Layout>
                 <>{Routes()}</>
