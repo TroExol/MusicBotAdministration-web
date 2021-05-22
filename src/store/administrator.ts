@@ -37,14 +37,18 @@ export type getAdministratorActionType = ({
 
 export const getAdministratorAction: getAdministratorActionType = async ({ login, password }) => {
     try {
-        const res = await axios.get(URLS.admin, {
+        const result = await axios.get(URLS.admin, {
             params: {
                 login,
                 password,
             },
         });
 
-        const administrator = res.data.recordset;
+        if (!result.data.success) {
+            return [false, result.data.message];
+        }
+
+        const administrator = result.data.result.recordset;
 
         return administrator.length > 0
             ? [
@@ -80,7 +84,11 @@ export const changePasswordAction: changePasswordActionType = async ({ id, newPa
             },
         });
 
-        if (result.data.rowsAffected?.[0] > 0) {
+        if (!result.data.success) {
+            return [false, result.data.message];
+        }
+
+        if (result.data.result.rowsAffected?.[0] > 0) {
             return [true, { password: newPassword }];
         }
 

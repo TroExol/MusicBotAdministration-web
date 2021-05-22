@@ -101,7 +101,13 @@ const Auth = (props: IProps): JSX.Element => {
                     )}
                     name="login"
                     control={control}
-                    rules={{ required: { value: true, message: 'Введите логин' } }}
+                    rules={{
+                        required: { value: true, message: 'Введите логин' },
+                        minLength: {
+                            value: 3,
+                            message: 'Длина логина должна быть больше 2',
+                        },
+                    }}
                     defaultValue=""
                 />
 
@@ -122,6 +128,10 @@ const Auth = (props: IProps): JSX.Element => {
                     control={control}
                     rules={{
                         required: { value: true, message: 'Введите пароль' },
+                        minLength: {
+                            value: 6,
+                            message: 'Длина пароля должна быть больше 5',
+                        },
                     }}
                     defaultValue=""
                 />

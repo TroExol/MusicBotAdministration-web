@@ -113,6 +113,10 @@ const PasswordEdit = (props: IProps): JSX.Element => {
                     required: { value: true, message: 'Введите старый пароль' },
                     validate: (value) =>
                         administrator.password === value ? true : 'Старый пароль указан неверно',
+                    minLength: {
+                        value: 6,
+                        message: 'Длина пароля должна быть больше 5',
+                    },
                 }}
                 defaultValue=""
             />
@@ -138,6 +142,10 @@ const PasswordEdit = (props: IProps): JSX.Element => {
                         getValues('oldPassword') !== value
                             ? true
                             : 'Новый пароль должен отличаться от старого',
+                    minLength: {
+                        value: 6,
+                        message: 'Длина пароля должна быть больше 5',
+                    },
                 }}
                 defaultValue=""
             />
