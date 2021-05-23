@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, TextField, Button } from '@material-ui/core';
+import { Typography, TextField, Button, useTheme } from '@material-ui/core';
 import { createStyles, makeStyles } from '@material-ui/core/styles';
 import { useForm, Controller } from 'react-hook-form';
 import { connect } from 'react-redux';
@@ -22,12 +22,12 @@ const useStyles = makeStyles((theme) => {
             width: '500px',
             padding: '20px',
             boxSizing: 'border-box',
-            border: `2px solid ${theme.palette.primary.main}`,
+            border: `2px solid ${theme.palette.secondary.main}`,
             borderRadius: '10px',
             backgroundColor: 'white',
         },
         title: {
-            color: theme.palette.secondary.main,
+            color: theme.palette.primary.main,
             marginBottom: '15px',
         },
         field: {
@@ -48,6 +48,7 @@ const PasswordEdit = (props: IProps): JSX.Element => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const classes = useStyles();
     const { handleSubmit, control, formState, getValues } = useForm();
+    const theme = useTheme();
 
     const onSubmitHandler = async (data: {
         oldPassword: string;
@@ -90,7 +91,7 @@ const PasswordEdit = (props: IProps): JSX.Element => {
 
     return (
         <form onSubmit={handleSubmit(onSubmitHandler)} className={classes.root}>
-            <Typography variant="h5" component="span" color="secondary">
+            <Typography variant="h5" component="span" color="primary">
                 Изменение пароля
             </Typography>
 
@@ -173,7 +174,12 @@ const PasswordEdit = (props: IProps): JSX.Element => {
                 defaultValue=""
             />
 
-            <Button variant="contained" color="secondary" type="submit">
+            <Button
+                variant="contained"
+                color="primary"
+                type="submit"
+                style={{ color: theme.palette.secondary.light }}
+            >
                 Подтвердить
             </Button>
         </form>

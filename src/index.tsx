@@ -4,6 +4,8 @@ import './index.css';
 
 import { BrowserRouter } from 'react-router-dom';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
+import { ruRU as ruRULocale } from '@material-ui/core/locale';
+import { ruRU as ruRUDataGrid } from '@material-ui/x-grid';
 import { Provider } from 'react-redux';
 import { SnackbarProvider } from 'notistack';
 
@@ -11,12 +13,16 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import store from './store';
 
-const theme = createMuiTheme({
-    palette: {
-        primary: { main: '#cbf1f5', light: '#e3fdfd' },
-        secondary: { main: '#71c9ce', light: '#a6e3e9' },
+const theme = createMuiTheme(
+    {
+        palette: {
+            primary: { main: '#71c9ce', light: '#a6e3e9' },
+            secondary: { main: '#cbf1f5', light: '#e3fdfd' },
+        },
     },
-});
+    ruRULocale,
+    ruRUDataGrid,
+);
 
 ReactDOM.render(
     <Provider store={store}>

@@ -48,18 +48,10 @@ export const getAdministratorAction: getAdministratorActionType = async ({ login
             return [false, result.data.message];
         }
 
-        const administrator = result.data.result.recordset;
+        const administrator = result.data.result;
 
-        return administrator.length > 0
-            ? [
-                  true,
-                  {
-                      id: administrator[0].ID,
-                      login: administrator[0].Логин,
-                      fio: administrator[0].ФИО,
-                      password: administrator[0].Пароль,
-                  },
-              ]
+        return administrator
+            ? [true, administrator]
             : [false, 'Неправильно указаны данные авторизации'];
     } catch (e) {
         return [false, 'Не удалось получить информацию с сервера'];

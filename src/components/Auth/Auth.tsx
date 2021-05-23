@@ -1,6 +1,14 @@
 import React from 'react';
 
-import { Button, createStyles, makeStyles, TextField, Theme, Typography } from '@material-ui/core';
+import {
+    Button,
+    createStyles,
+    makeStyles,
+    TextField,
+    Theme,
+    Typography,
+    useTheme,
+} from '@material-ui/core';
 import { useForm, Controller } from 'react-hook-form';
 import { connect } from 'react-redux';
 import { useSnackbar } from 'notistack';
@@ -29,12 +37,11 @@ const useStyles = makeStyles((theme: Theme) =>
             width: '500px',
             padding: '20px',
             boxSizing: 'border-box',
-            border: `2px solid ${theme.palette.secondary.main}`,
+            border: `2px solid ${theme.palette.primary.main}`,
             borderRadius: '10px',
             backgroundColor: 'white',
         },
         title: {
-            color: theme.palette.secondary.main,
             marginBottom: '15px',
         },
         field: {
@@ -55,6 +62,7 @@ const Auth = (props: IProps): JSX.Element => {
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const { handleSubmit, control, formState } = useForm();
+    const theme = useTheme();
 
     const onSuccessConfirmationHandler = (administrator: IAdministrator) => {
         const snackBar = enqueueSnackbar('Вы успешно вошли', {
@@ -136,7 +144,12 @@ const Auth = (props: IProps): JSX.Element => {
                     defaultValue=""
                 />
 
-                <Button variant="contained" color="primary" type="submit">
+                <Button
+                    variant="contained"
+                    color="primary"
+                    type="submit"
+                    style={{ color: theme.palette.secondary.light }}
+                >
                     Войти
                 </Button>
             </form>

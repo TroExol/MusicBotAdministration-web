@@ -84,7 +84,7 @@ const Administrator = (props: IProps): JSX.Element => {
             <Button
                 aria-controls="user-menu"
                 aria-haspopup="true"
-                color="secondary"
+                color="primary"
                 variant="contained"
                 onClick={handleUserClick}
                 style={{
@@ -92,8 +92,8 @@ const Administrator = (props: IProps): JSX.Element => {
                     flexDirection: 'column',
                 }}
             >
-                <PersonOutlined style={{ color: theme.palette.primary.light }} />
-                <ArrowDropDownOutlined style={{ color: theme.palette.primary.light }} />
+                <PersonOutlined style={{ color: theme.palette.secondary.light }} />
+                <ArrowDropDownOutlined style={{ color: theme.palette.secondary.light }} />
             </Button>
 
             <Menu
@@ -127,18 +127,18 @@ const Administrator = (props: IProps): JSX.Element => {
                 <DialogActions>
                     <Button
                         onClick={handleExitConfirmationClose}
-                        color="secondary"
+                        color="primary"
                         variant="contained"
-                        style={{ color: theme.palette.primary.light }}
+                        style={{ color: theme.palette.secondary.light }}
                         autoFocus
                     >
                         Остаться
                     </Button>
                     <Button
                         onClick={handleExit}
-                        color="secondary"
+                        color="primary"
                         variant="outlined"
-                        style={{ color: theme.palette.secondary.main }}
+                        style={{ color: theme.palette.primary.main }}
                     >
                         Выйти
                     </Button>

@@ -16,6 +16,7 @@ const useStyles = makeStyles({
         flex: '1',
         width: constants.CONTENT_WIDTH,
         margin: '0 auto',
+        padding: '20px 0',
     },
 });
 

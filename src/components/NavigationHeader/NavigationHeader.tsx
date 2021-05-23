@@ -11,7 +11,7 @@ const useStyles = makeStyles((theme: Theme) =>
         root: {
             display: 'flex',
             flexDirection: 'column',
-            backgroundColor: theme.palette.primary.main,
+            backgroundColor: theme.palette.secondary.main,
             width: '100%',
         },
         content: {
@@ -40,8 +40,8 @@ const NavigationHeader = (): JSX.Element => {
         <div className={classes.root}>
             <div className={classes.content}>
                 <div className={classes.routes}>
-                    <Button color="secondary" variant="contained" onClick={() => history.push('/')}>
-                        <HomeOutlined style={{ color: theme.palette.primary.light }} />
+                    <Button color="primary" variant="contained" onClick={() => history.push('/')}>
+                        <HomeOutlined style={{ color: theme.palette.secondary.light }} />
                     </Button>
                 </div>
 
