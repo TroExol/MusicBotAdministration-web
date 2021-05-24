@@ -171,22 +171,27 @@ const Queries = (): JSX.Element => {
 
         const { author, countTracks, date, queryType, tracks, user } = data;
 
+        const queryTypeName = queryType.split(',')[1];
+
         const query: IQuery = {
             id: -1,
-            author,
-            countTracks: Number(countTracks),
+            author: queryTypeName !== 'Функции' ? author : '',
+            countTracks: queryTypeName !== 'Функции' ? Number(countTracks) : 0,
             date: `${date}:00.000Z`,
             queryTypeId: Number(queryType.split(',')[0]),
             queryType: queryType.split(',')[1],
             userId: Number(user.split(',')[0]),
             user: user.split(',')[1],
             userUrl: user.split(',')[2],
-            tracks: tracks.map((track: string) => ({
-                id: Number(track.split(',')[0]),
-                track: track.split(',')[1],
-                authorId: Number(track.split(',')[2]),
-                author: track.split(',')[3],
-            })),
+            tracks:
+                queryTypeName !== 'Функции'
+                    ? tracks.map((track: string) => ({
+                          id: Number(track.split(',')[0]),
+                          track: track.split(',')[1],
+                          authorId: Number(track.split(',')[2]),
+                          author: track.split(',')[3],
+                      }))
+                    : [],
         };
 
         const queryId = await addQueryAction(query);
@@ -236,22 +241,27 @@ const Queries = (): JSX.Element => {
 
         const { author, countTracks, date, queryType, tracks, user } = data;
 
+        const queryTypeName = queryType.split(',')[1];
+
         const updatedQuery: IQuery = {
             id: (query as IQuery).id,
-            author,
-            countTracks: Number(countTracks),
+            author: queryTypeName !== 'Функции' ? author : '',
+            countTracks: queryTypeName !== 'Функции' ? Number(countTracks) : 0,
             date: `${date}:00.000Z`,
             queryTypeId: Number(queryType.split(',')[0]),
             queryType: queryType.split(',')[1],
             userId: Number(user.split(',')[0]),
             user: user.split(',')[1],
             userUrl: user.split(',')[2],
-            tracks: tracks.map((track: string) => ({
-                id: Number(track.split(',')[0]),
-                track: track.split(',')[1],
-                authorId: Number(track.split(',')[2]),
-                author: track.split(',')[3],
-            })),
+            tracks:
+                queryTypeName !== 'Функции'
+                    ? tracks.map((track: string) => ({
+                          id: Number(track.split(',')[0]),
+                          track: track.split(',')[1],
+                          authorId: Number(track.split(',')[2]),
+                          author: track.split(',')[3],
+                      }))
+                    : [],
         };
 
         const queryId = await updateQueryAction(updatedQuery);
@@ -262,6 +272,7 @@ const Queries = (): JSX.Element => {
             );
 
             setQueriesState(newState);
+            setSelectedQueries([updatedQuery]);
 
             const snackBar = enqueueSnackbar('Запрос успешно изменен', {
                 variant: 'success',
@@ -284,9 +295,10 @@ const Queries = (): JSX.Element => {
                     if (queries[1].length <= 0) {
                         throw new Error('Нет запросов');
                     }
-
-                    setQueriesState(queries[1]);
-                    setLoading(false);
+                    setTimeout(() => {
+                        setQueriesState(queries[1]);
+                        setLoading(false);
+                    }, 0);
                 } else {
                     throw new Error(queries[1]);
                 }

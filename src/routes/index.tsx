@@ -1,6 +1,9 @@
 import React from 'react';
 import { Switch, Route } from 'react-router-dom';
+import { Typography } from '@material-ui/core';
+
 import homeRoutes from './home';
+import queryTypesRoutes from './queryTypes';
 
 export interface IRouterObject {
     name: string;
@@ -9,7 +12,7 @@ export interface IRouterObject {
     RenderFn: () => JSX.Element;
 }
 
-export const allRoutes = [...homeRoutes];
+export const allRoutes = [...homeRoutes, ...queryTypesRoutes];
 
 const Routes = (): JSX.Element => {
     return (
@@ -17,7 +20,21 @@ const Routes = (): JSX.Element => {
             {allRoutes.map(({ name, path, exact, RenderFn }) => (
                 <Route key={name} path={path} exact={exact} render={() => <RenderFn />} />
             ))}
-            <Route render={() => <h1>Not Found</h1>} />
+            <Route
+                render={() => (
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <Typography variant="h4" component="h1" color="primary">
+                            Страница не найдена
+                        </Typography>
+                    </div>
+                )}
+            />
         </Switch>
     );
 };

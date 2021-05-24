@@ -26,3 +26,43 @@ export const getQueryTypesAction: getQueryTypesActionType = async () => {
         return [false, 'Не удалось получить информацию с сервера'];
     }
 };
+
+export type addQueryTypeActionType = (
+    queryType: IQueryType,
+) => Promise<[true, number] | [false, string]>;
+
+export const addQueryTypeAction: addQueryTypeActionType = async (queryType) => {
+    try {
+        const result = await axios.post(URLS.queryType, {
+            params: queryType,
+        });
+
+        if (!result.data.success) {
+            return [false, result.data.message];
+        }
+
+        const queryId = result.data.result;
+
+        return [true, queryId];
+    } catch (e) {
+        return [false, 'Не удалось отправить запрос на сервер'];
+    }
+};
+
+export const updateQueryTypeAction: addQueryTypeActionType = async (queryType) => {
+    try {
+        const result = await axios.put(URLS.queryType, {
+            params: queryType,
+        });
+
+        if (!result.data.success) {
+            return [false, result.data.message];
+        }
+
+        const queryTypeId = result.data.result;
+
+        return [true, queryTypeId];
+    } catch (e) {
+        return [false, 'Не удалось отправить запрос на сервер'];
+    }
+};

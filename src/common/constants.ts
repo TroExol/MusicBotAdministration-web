@@ -8,6 +8,7 @@ export const URLS = {
     query: `${baseServerUrl}/query`,
     users: `${baseServerUrl}/users`,
     queryTypes: `${baseServerUrl}/queryTypes`,
+    queryType: `${baseServerUrl}/queryType`,
     tracks: `${baseServerUrl}/tracks`,
 };
 

@@ -1,6 +1,14 @@
-import React from 'react';
-import { Button, createStyles, makeStyles, Theme, useTheme } from '@material-ui/core';
-import { HomeOutlined } from '@material-ui/icons';
+import React, { MouseEvent, useState } from 'react';
+import {
+    Button,
+    createStyles,
+    makeStyles,
+    Menu,
+    MenuItem,
+    Theme,
+    useTheme,
+} from '@material-ui/core';
+import { ArrowDropDownOutlined, HomeOutlined, TableChartOutlined } from '@material-ui/icons';
 import { useHistory } from 'react-router-dom';
 
 import constants from '../../common/constants';
@@ -24,6 +32,7 @@ const useStyles = makeStyles((theme: Theme) =>
             boxSizing: 'border-box',
         },
         routes: {
+            display: 'flex',
             '& > *:not(:first-child)': {
                 marginLeft: '15px',
             },
@@ -36,13 +45,61 @@ const NavigationHeader = (): JSX.Element => {
     const theme = useTheme();
     const history = useHistory();
 
+    const [tablesEl, setTablesEl] = useState<null | HTMLElement>(null);
+
+    const handleTablesClick = (event: MouseEvent<HTMLButtonElement>) => {
+        setTablesEl(() => event.currentTarget);
+    };
+
+    const handleTablesClose = () => {
+        setTablesEl(() => null);
+    };
+
     return (
         <div className={classes.root}>
             <div className={classes.content}>
                 <div className={classes.routes}>
-                    <Button color="primary" variant="contained" onClick={() => history.push('/')}>
-                        <HomeOutlined style={{ color: theme.palette.secondary.light }} />
+                    <Button
+                        color="primary"
+                        variant="contained"
+                        onClick={() => history.push('/')}
+                        style={{ color: theme.palette.secondary.light }}
+                    >
+                        <HomeOutlined />
                     </Button>
+
+                    <Button
+                        aria-controls="tables-menu"
+                        aria-haspopup="true"
+                        color="primary"
+                        variant="contained"
+                        onClick={handleTablesClick}
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            color: theme.palette.secondary.light,
+                        }}
+                    >
+                        <TableChartOutlined />
+                        &nbsp;Таблицы
+                        <ArrowDropDownOutlined />
+                    </Button>
+
+                    <Menu
+                        id="tables-menu"
+                        anchorEl={tablesEl}
+                        keepMounted
+                        open={Boolean(tablesEl)}
+                        onClose={handleTablesClose}
+                    >
+                        <MenuItem onClick={() => history.push('/queryTypes')}>
+                            Типы запросов
+                        </MenuItem>
+                        <MenuItem onClick={() => history.push('/subscriptions')}>Подписки</MenuItem>
+                        <MenuItem onClick={() => history.push('/users')}>Пользователи</MenuItem>
+                        <MenuItem onClick={() => history.push('/payments')}>Оплаты</MenuItem>
+                        <MenuItem onClick={() => history.push('/tracks')}>Треки</MenuItem>
+                    </Menu>
                 </div>
 
                 <Administrator />

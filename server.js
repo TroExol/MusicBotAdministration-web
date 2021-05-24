@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires,camelcase */
-// noinspection JSNonASCIINames,NonAsciiCharacters
+// noinspection JSNonASCIINames,NonAsciiCharacters,JSUnresolvedVariable,ExceptionCaughtLocallyJS
 
 const express = require('express');
 const sql = require('mssql');
@@ -93,7 +93,7 @@ app.get('/queries/', async (req, res) => {
         const queriesGrouped = queries.recordset.reduce((state, query) => {
             const foundQuery = state.find((queryFind) => queryFind.ID === query.ID);
 
-            if (foundQuery) {
+            if (foundQuery && query.ID_Трек) {
                 foundQuery.Треки.push({
                     ID: query.ID_Трек,
                     Трек: query.Трек,
@@ -126,14 +126,16 @@ app.get('/queries/', async (req, res) => {
                 СсылкаНаVK,
                 ID_ТипЗапроса,
                 ТипЗапроса,
-                Треки: [
-                    {
-                        ID: query.ID_Трек,
-                        Трек: query.Трек,
-                        ID_Автор: query.ID_Автор,
-                        Автор: query.ИмяАвтора,
-                    },
-                ],
+                Треки: query.ID_Трек
+                    ? [
+                          {
+                              ID: query.ID_Трек,
+                              Трек: query.Трек,
+                              ID_Автор: query.ID_Автор,
+                              Автор: query.ИмяАвтора,
+                          },
+                      ]
+                    : [],
             });
 
             return state;
@@ -332,6 +334,67 @@ app.get('/queryTypes', async (req, res) => {
             success: false,
             error: err.message,
             message: 'Не удалось получить информацию с сервера',
+        });
+    }
+});
+
+app.post('/queryType', async (req, res) => {
+    try {
+        const { name } = req.body.params;
+
+        await sql.connect(config);
+
+        const response = await sql.query`INSERT INTO ТипЗапроса (Название)
+             OUTPUT INSERTED.ID
+             VALUES (${name})`;
+
+        let queryTypeId;
+
+        if (response?.recordset?.[0]?.ID != null) {
+            queryTypeId = response.recordset[0].ID;
+        }
+
+        if (queryTypeId) {
+            res.status(201).json({
+                success: true,
+                result: queryTypeId,
+            });
+        } else {
+            throw new Error('Не удалось добавить тип запроса');
+        }
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось отправить информацию на сервер',
+        });
+    }
+});
+
+app.put('/queryType/', async (req, res) => {
+    try {
+        const { id, name } = req.body.params;
+
+        await sql.connect(config);
+
+        const response = await sql.query`UPDATE ТипЗапроса SET Название = ${name}
+             WHERE ID = ${id}`;
+
+        const success = response.rowsAffected[0] > 0;
+
+        if (success) {
+            res.status(200).json({
+                success: true,
+                result: id,
+            });
+        } else {
+            throw new Error('Не удалось изменить тип запроса');
+        }
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось отправить информацию на сервер',
         });
     }
 });
