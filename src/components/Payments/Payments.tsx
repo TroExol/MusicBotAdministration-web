@@ -10,25 +10,19 @@ import {
     Typography,
     useTheme,
 } from '@material-ui/core';
-import {
-    XGrid,
-    GridColDef,
-    GridValueFormatterParams,
-    GridRowSelectedParams,
-} from '@material-ui/x-grid';
+import { XGrid, GridColDef, GridRowSelectedParams } from '@material-ui/x-grid';
 import { useSnackbar } from 'notistack';
 
-import {
-    addQueryAction,
-    deleteQueryAction,
-    getQueriesAction,
-    IQuery,
-    updateQueryAction,
-} from '../../store/queries';
-import { ITrack } from '../../store/tracks';
 import { renderCellExpand } from '../GridCellExpand/GridCellExpand';
-import CreateQuery, { createQueryFormType } from './CreateQuery';
+import CreatePayment, { createPaymentFormType } from './CreatePayment';
 import { ISOtoDateTime } from '../../utils/formatters';
+import {
+    addPaymentAction,
+    deletePaymentAction,
+    getPaymentsAction,
+    IPayment,
+    updatePaymentAction,
+} from '../../store/payments';
 
 const useStyles = makeStyles({
     content: {
@@ -54,79 +48,66 @@ const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', type: 'number', renderCell: renderCellExpand },
     {
         field: 'date',
-        headerName: 'Дата Запроса',
+        headerName: 'Дата оплаты',
         width: 190,
         type: 'dateTime',
         renderCell: (params) =>
             renderCellExpand(params, (parameters) => ISOtoDateTime(parameters.value as string)),
     },
     {
-        field: 'countTracks',
-        headerName: 'Количество треков',
+        field: 'amount',
+        headerName: 'Сумма, руб',
         type: 'number',
         width: 200,
         renderCell: renderCellExpand,
     },
     {
-        field: 'author',
-        headerName: 'Запрашиваемый автор',
-        width: 200,
+        field: 'fio',
+        headerName: 'Пользователь',
+        width: 190,
         renderCell: renderCellExpand,
     },
-    { field: 'user', headerName: 'Пользователь', width: 190, renderCell: renderCellExpand },
     {
-        field: 'userUrl',
+        field: 'url',
         headerName: 'Ссылка на пользователя',
         width: 250,
         renderCell: renderCellExpand,
     },
-    { field: 'queryType', headerName: 'Тип запроса', width: 180, renderCell: renderCellExpand },
-    {
-        field: 'tracks',
-        headerName: 'Полученные треки',
-        width: 200,
-        sortable: false,
-        renderCell: (params) =>
-            renderCellExpand(params, (parameters: GridValueFormatterParams) =>
-                (parameters.value as ITrack[])
-                    .map((track) => `${track.author} ${track.name}`)
-                    .join(', '),
-            ),
-    },
+    { field: 'subscription', headerName: 'Подписка', width: 180, renderCell: renderCellExpand },
 ];
 
-const Queries = (): JSX.Element => {
+const Payments = (): JSX.Element => {
     const classes = useStyles();
 
     const theme = useTheme();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    const [queriesState, setQueriesState] = useState<IQuery[]>([]);
-    const [selectedQueries, setSelectedQueries] = useState<IQuery[]>([]);
+    const [paymentsState, setPaymentsState] = useState<IPayment[]>([]);
+    const [selectedPayments, setSelectedPayments] = useState<IPayment[]>([]);
     const [loading, setLoading] = useState(true);
     const [openCreateState, setOpenCreateState] = useState<boolean>(false);
     const [openEditState, setOpenEditState] = useState<boolean>(false);
     const [openDeleteConfirmationState, setOpenDeleteConfirmationState] = useState<boolean>(false);
 
     const handleDelete = async () => {
-        const deletedQueryIds: number[] = [];
+        const deletedPaymentIds: number[] = [];
 
         // eslint-disable-next-line no-restricted-syntax
-        for (const query of selectedQueries) {
+        for (const payments of selectedPayments) {
             // eslint-disable-next-line no-await-in-loop
-            const res = await deleteQueryAction(query.id);
+            const res = await deletePaymentAction(payments.id);
 
             if (res[0]) {
-                deletedQueryIds.push(query.id);
+                deletedPaymentIds.push(payments.id);
 
-                const snackBar = enqueueSnackbar(`Запрос с id ${query.id} успешно удален`, {
+                const snackBar = enqueueSnackbar(`Оплата с id ${payments.id} успешно удалена`, {
                     variant: 'success',
                     anchorOrigin: { horizontal: 'right', vertical: 'top' },
                     onClick: () => closeSnackbar(snackBar),
                 });
             } else {
-                const snackBar = enqueueSnackbar(`Не удалось удалить запрос с id ${query.id}`, {
+                const snackBar = enqueueSnackbar(`Не удалось удалить оплату с id ${payments.id}`, {
                     variant: 'error',
                     anchorOrigin: { horizontal: 'right', vertical: 'top' },
                     onClick: () => closeSnackbar(snackBar),
@@ -134,15 +115,15 @@ const Queries = (): JSX.Element => {
             }
         }
 
-        setQueriesState(() =>
-            queriesState.filter(
-                (query) => !deletedQueryIds.some((queryId) => query.id === queryId),
+        setPaymentsState(() =>
+            paymentsState.filter(
+                (payment) => !deletedPaymentIds.some((paymentId) => payment.id === paymentId),
             ),
         );
 
-        setSelectedQueries(() =>
-            selectedQueries.filter(
-                (query) => !deletedQueryIds.some((queryId) => query.id === queryId),
+        setSelectedPayments(() =>
+            selectedPayments.filter(
+                (payment) => !deletedPaymentIds.some((paymentId) => payment.id === paymentId),
             ),
         );
 
@@ -150,8 +131,8 @@ const Queries = (): JSX.Element => {
     };
 
     const handleDeleteConfirmationClick = () => {
-        if (selectedQueries.length <= 0) {
-            const snackBar = enqueueSnackbar('Выберите минимум 1 запрос', {
+        if (selectedPayments.length <= 0) {
+            const snackBar = enqueueSnackbar('Выберите минимум 1 оплату', {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -166,46 +147,33 @@ const Queries = (): JSX.Element => {
         setOpenDeleteConfirmationState(() => false);
     };
 
-    const onSuccessCreateHandler = async (data: createQueryFormType) => {
+    const onSuccessCreateHandler = async (data: createPaymentFormType) => {
         setOpenCreateState(() => false);
 
-        const { author, countTracks, date, queryType, tracks, user } = data;
+        const { date, user, subscription } = data;
 
-        const queryTypeName = queryType.split(',')[1];
-
-        const query: IQuery = {
+        const payment: IPayment = {
             id: -1,
-            author: queryTypeName !== 'Функции' ? author : '',
-            countTracks: queryTypeName !== 'Функции' ? Number(countTracks) : 0,
             date: `${date}:00.000Z`,
-            queryTypeId: Number(queryType.split(',')[0]),
-            queryType: queryType.split(',')[1],
             userId: Number(user.split(',')[0]),
-            user: user.split(',')[1],
-            userUrl: user.split(',')[2],
-            tracks:
-                queryTypeName !== 'Функции'
-                    ? tracks.map((track: string) => ({
-                          id: Number(track.split(',')[0]),
-                          name: track.split(',')[1],
-                          authorId: Number(track.split(',')[2]),
-                          author: track.split(',')[3],
-                      }))
-                    : [],
+            fio: user.split(',')[1],
+            url: user.split(',')[2],
+            subscriptionId: Number(subscription.split(',')[0]),
+            subscription: subscription.split(',')[1],
         };
 
-        const queryId = await addQueryAction(query);
+        const paymentId = await addPaymentAction(payment);
 
-        if (queryId[0]) {
-            setQueriesState([...queriesState, { ...query, id: queryId[1] }]);
-
-            const snackBar = enqueueSnackbar('Запрос успешно добавлен', {
+        if (paymentId[0]) {
+            const snackBar = enqueueSnackbar('Оплата успешно добавлена', {
                 variant: 'success',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
             });
+
+            updateTable();
         } else {
-            const snackBar = enqueueSnackbar(queryId[1], {
+            const snackBar = enqueueSnackbar(paymentId[1], {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -215,17 +183,17 @@ const Queries = (): JSX.Element => {
 
     const rowSelectionHandler = (row: GridRowSelectedParams) => {
         if (row.isSelected) {
-            const newState = [...selectedQueries, row.data as IQuery];
-            setSelectedQueries(() => newState);
+            const newState = [...selectedPayments, row.data as IPayment];
+            setSelectedPayments(() => newState);
         } else {
-            const newState = selectedQueries.filter((query) => query.id !== row.data.id);
-            setSelectedQueries(() => newState);
+            const newState = selectedPayments.filter((payment) => payment.id !== row.data.id);
+            setSelectedPayments(() => newState);
         }
     };
 
-    const editQueryHandler = () => {
-        if (selectedQueries.length !== 1) {
-            const snackBar = enqueueSnackbar('Выберите 1 запрос', {
+    const editPaymentHandler = () => {
+        if (selectedPayments.length !== 1) {
+            const snackBar = enqueueSnackbar('Выберите 1 оплату', {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -236,51 +204,37 @@ const Queries = (): JSX.Element => {
         setOpenEditState(() => true);
     };
 
-    const onSuccessEditHandler = async (data: createQueryFormType, query: IQuery | undefined) => {
+    const onSuccessEditHandler = async (
+        data: createPaymentFormType,
+        payment: IPayment | undefined,
+    ) => {
         setOpenEditState(() => false);
 
-        const { author, countTracks, date, queryType, tracks, user } = data;
+        const { date, user, subscription } = data;
 
-        const queryTypeName = queryType.split(',')[1];
-
-        const updatedQuery: IQuery = {
-            id: (query as IQuery).id,
-            author: queryTypeName !== 'Функции' ? author : '',
-            countTracks: queryTypeName !== 'Функции' ? Number(countTracks) : 0,
+        const updatedPayment: IPayment = {
+            id: (payment as IPayment).id,
             date: `${date}:00.000Z`,
-            queryTypeId: Number(queryType.split(',')[0]),
-            queryType: queryType.split(',')[1],
             userId: Number(user.split(',')[0]),
-            user: user.split(',')[1],
-            userUrl: user.split(',')[2],
-            tracks:
-                queryTypeName !== 'Функции'
-                    ? tracks.map((track: string) => ({
-                          id: Number(track.split(',')[0]),
-                          name: track.split(',')[1],
-                          authorId: Number(track.split(',')[2]),
-                          author: track.split(',')[3],
-                      }))
-                    : [],
+            fio: user.split(',')[1],
+            url: user.split(',')[2],
+            subscriptionId: Number(subscription.split(',')[0]),
+            subscription: subscription.split(',')[1],
         };
 
-        const queryId = await updateQueryAction(updatedQuery);
+        const paymentId = await updatePaymentAction(updatedPayment);
 
-        if (queryId[0]) {
-            const newState = queriesState.map((queryState) =>
-                queryState.id !== queryId[1] ? queryState : updatedQuery,
-            );
-
-            setQueriesState(newState);
-            setSelectedQueries([updatedQuery]);
-
+        if (paymentId[0]) {
             const snackBar = enqueueSnackbar('Запрос успешно изменен', {
                 variant: 'success',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
             });
+
+            setSelectedPayments([]);
+            updateTable();
         } else {
-            const snackBar = enqueueSnackbar(queryId[1], {
+            const snackBar = enqueueSnackbar(paymentId[1], {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -288,23 +242,25 @@ const Queries = (): JSX.Element => {
         }
     };
 
-    useEffect(() => {
-        getQueriesAction()
-            .then((queries) => {
-                if (queries[0]) {
-                    if (queries[1].length <= 0) {
-                        throw new Error('Нет запросов');
+    function updateTable() {
+        setLoading(() => true);
+
+        getPaymentsAction()
+            .then((payments) => {
+                if (payments[0]) {
+                    if (payments[1].length <= 0) {
+                        throw new Error('Нет оплат');
                     }
                     setTimeout(() => {
-                        setQueriesState(queries[1]);
-                        setLoading(false);
+                        setPaymentsState(() => payments[1]);
+                        setLoading(() => false);
                     }, 0);
                 } else {
-                    throw new Error(queries[1]);
+                    throw new Error(payments[1]);
                 }
             })
             .catch((error) => {
-                setQueriesState([]);
+                setPaymentsState([]);
                 setLoading(false);
 
                 const snackBar = enqueueSnackbar(error.message, {
@@ -313,18 +269,22 @@ const Queries = (): JSX.Element => {
                     onClick: () => closeSnackbar(snackBar),
                 });
             });
+    }
+
+    useEffect(() => {
+        updateTable();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
         <div>
             <Typography variant="h5" component="h2" color="primary">
-                Запросы
+                Оплаты
             </Typography>
 
             <div className={classes.content}>
                 <XGrid
-                    rows={queriesState}
+                    rows={paymentsState}
                     columns={columns}
                     pageSize={5}
                     checkboxSelection
@@ -347,7 +307,7 @@ const Queries = (): JSX.Element => {
                         variant="contained"
                         color="primary"
                         style={{ color: theme.palette.secondary.light }}
-                        onClick={editQueryHandler}
+                        onClick={editPaymentHandler}
                     >
                         Изменить
                     </Button>
@@ -366,8 +326,8 @@ const Queries = (): JSX.Element => {
                         open={openCreateState}
                         onBackdropClick={() => setOpenCreateState(() => false)}
                     >
-                        <CreateQuery
-                            title="Создание запроса"
+                        <CreatePayment
+                            title="Создание оплаты"
                             onSuccessConfirm={onSuccessCreateHandler}
                         />
                     </Modal>
@@ -377,10 +337,10 @@ const Queries = (): JSX.Element => {
                         open={openEditState}
                         onBackdropClick={() => setOpenEditState(() => false)}
                     >
-                        <CreateQuery
-                            title="Изменение запроса"
+                        <CreatePayment
+                            title="Изменение оплаты"
                             onSuccessConfirm={onSuccessEditHandler}
-                            query={selectedQueries[0]}
+                            payment={selectedPayments[0]}
                         />
                     </Modal>
 
@@ -390,7 +350,7 @@ const Queries = (): JSX.Element => {
                         aria-labelledby="alert-dialog-delete"
                     >
                         <DialogTitle id="alert-dialog-delete">
-                            Вы точно хотите удалить выбранные запросы?
+                            Вы точно хотите удалить выбранные оплаты?
                         </DialogTitle>
                         <DialogActions>
                             <Button
@@ -418,4 +378,4 @@ const Queries = (): JSX.Element => {
     );
 };
 
-export default Queries;
+export default Payments;

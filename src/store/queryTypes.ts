@@ -23,7 +23,7 @@ export const getQueryTypesAction: getQueryTypesActionType = async () => {
 
         return [true, queryTypes];
     } catch (e) {
-        return [false, 'Не удалось получить информацию с сервера'];
+        return [false, 'Не удалось получить типы запросов'];
     }
 };
 
@@ -45,7 +45,7 @@ export const addQueryTypeAction: addQueryTypeActionType = async (queryType) => {
 
         return [true, queryId];
     } catch (e) {
-        return [false, 'Не удалось отправить запрос на сервер'];
+        return [false, 'Не удалось добавить тип запроса'];
     }
 };
 
@@ -63,6 +63,6 @@ export const updateQueryTypeAction: addQueryTypeActionType = async (queryType) =
 
         return [true, queryTypeId];
     } catch (e) {
-        return [false, 'Не удалось отправить запрос на сервер'];
+        return [false, 'Не удалось изменить тип запроса'];
     }
 };

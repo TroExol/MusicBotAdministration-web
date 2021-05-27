@@ -153,7 +153,7 @@ app.get('/queries/', async (req, res) => {
             queryType: query.ТипЗапроса,
             tracks: query.Треки.map((track) => ({
                 id: track.ID,
-                track: track.Трек,
+                name: track.Трек,
                 authorId: track.ID_Автор,
                 author: track.Автор,
             })),
@@ -193,16 +193,14 @@ app.post('/query/', async (req, res) => {
         }
 
         if (queryId) {
-            tracks.forEach((track) => {
-                (async () => {
-                    const iTrack = track;
-
-                    await sql.query(
-                        `INSERT INTO ПолученныйТрек (ID_Трек, ID_Запрос)
+            // eslint-disable-next-line no-restricted-syntax
+            for (const iTrack of tracks) {
+                // eslint-disable-next-line no-await-in-loop
+                await sql.query(
+                    `INSERT INTO ПолученныйТрек (ID_Трек, ID_Запрос)
                          VALUES (${iTrack.id}, ${queryId})`,
-                    );
-                })();
-            });
+                );
+            }
 
             res.status(201).json({
                 success: true,
@@ -235,16 +233,14 @@ app.put('/query/', async (req, res) => {
 
         if (success) {
             if (await sql.query`DELETE FROM ПолученныйТрек WHERE ID_Запрос = ${id}`) {
-                tracks.forEach((track) => {
-                    (async () => {
-                        const iTrack = track;
-
-                        await sql.query(
-                            `INSERT INTO ПолученныйТрек (ID_Трек, ID_Запрос)
+                // eslint-disable-next-line no-restricted-syntax
+                for (const iTrack of tracks) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await sql.query(
+                        `INSERT INTO ПолученныйТрек (ID_Трек, ID_Запрос)
                              VALUES (${iTrack.id}, ${id})`,
-                        );
-                    })();
-                });
+                    );
+                }
             } else {
                 throw new Error('Не удалось удалить полученные треки');
             }
@@ -265,7 +261,7 @@ app.put('/query/', async (req, res) => {
     }
 });
 
-app.delete('/query', async (req, res) => {
+app.delete('/query/', async (req, res) => {
     try {
         const { id } = req.query;
 
@@ -285,7 +281,7 @@ app.delete('/query', async (req, res) => {
     }
 });
 
-app.get('/users', async (req, res) => {
+app.get('/users/', async (req, res) => {
     try {
         await sql.connect(config);
 
@@ -312,7 +308,7 @@ app.get('/users', async (req, res) => {
     }
 });
 
-app.get('/queryTypes', async (req, res) => {
+app.get('/queryTypes/', async (req, res) => {
     try {
         await sql.connect(config);
 
@@ -338,7 +334,7 @@ app.get('/queryTypes', async (req, res) => {
     }
 });
 
-app.post('/queryType', async (req, res) => {
+app.post('/queryType/', async (req, res) => {
     try {
         const { name } = req.body.params;
 
@@ -399,18 +395,20 @@ app.put('/queryType/', async (req, res) => {
     }
 });
 
-app.get('/tracks', async (req, res) => {
+app.get('/tracks/', async (req, res) => {
     try {
         await sql.connect(config);
 
         const tracks = await sql.query(
-            `SELECT Трек.ID, Название, ID_Автор, Автор.ИмяАвтора FROM Трек
-              LEFT JOIN Автор ON Трек.ID_Автор = Автор.ID`,
+            `SELECT Трек.ID, Название, ID_Автор, Автор.ИмяАвтора
+                FROM Трек
+                LEFT JOIN Автор ON Трек.ID_Автор = Автор.ID
+                ORDER BY Трек.ID`,
         );
 
         const formatTrack = (track) => ({
             id: track.ID,
-            track: track.Название,
+            name: track.Название,
             authorId: track.ID_Автор,
             author: track.ИмяАвтора,
         });
@@ -430,8 +428,492 @@ app.get('/tracks', async (req, res) => {
     }
 });
 
+app.post('/track/', async (req, res) => {
+    try {
+        const { name, author } = req.body.params;
+
+        await sql.connect(config);
+
+        let authorId;
+
+        const authorResponse = await sql.query`SELECT ID FROM Автор WHERE ИмяАвтора = ${author}`;
+
+        if (authorResponse.recordset.length <= 0) {
+            authorId = (
+                await sql.query`INSERT INTO Автор (ИмяАвтора)
+              OUTPUT INSERTED.ID
+              VALUES (${author})`
+            )?.recordset?.[0]?.ID;
+        } else {
+            authorId = authorResponse.recordset[0].ID;
+        }
+
+        if (!authorId) {
+            throw new Error('Не удалось добавить автора');
+        }
+
+        const response = await sql.query`INSERT INTO Трек (Название, ID_Автор)
+             OUTPUT INSERTED.ID
+             VALUES (${name}, ${authorId})`;
+
+        let trackId;
+
+        if (response?.recordset?.[0]?.ID != null) {
+            trackId = response.recordset[0].ID;
+        }
+
+        if (!trackId) {
+            throw new Error('Не удалось добавить трек');
+        }
+
+        res.status(201).json({
+            success: true,
+            result: trackId,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось отправить информацию на сервер',
+        });
+    }
+});
+
+app.put('/track/', async (req, res) => {
+    try {
+        const { id, name, author } = req.body.params;
+
+        await sql.connect(config);
+
+        let authorId;
+
+        const authorResponse = await sql.query`SELECT ID FROM Автор WHERE ИмяАвтора = ${author}`;
+
+        if (authorResponse.recordset.length <= 0) {
+            authorId = (
+                await sql.query`INSERT INTO Автор (ИмяАвтора)
+              OUTPUT INSERTED.ID
+              VALUES (${author})`
+            )?.recordset?.[0]?.ID;
+        } else {
+            authorId = authorResponse.recordset[0].ID;
+        }
+
+        if (!authorId) {
+            throw new Error('Не удалось добавить автора');
+        }
+
+        const response = await sql.query`UPDATE Трек SET Название = ${name},
+                ID_Автор = ${authorId}
+             WHERE ID = ${id}`;
+
+        const success = response.rowsAffected[0] > 0;
+
+        if (!success) {
+            throw new Error('Не удалось изменить трек');
+        }
+
+        res.status(200).json({
+            success: true,
+            result: id,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось отправить информацию на сервер',
+        });
+    }
+});
+
+app.get('/users/', async (req, res) => {
+    try {
+        await sql.connect(config);
+
+        const users = await sql.query(`SELECT * FROM Пользователь`);
+
+        const formatUser = (user) => ({
+            id: user.ID,
+            fio: user.ФамилияИмя,
+            url: user.СсылкаНаVK,
+        });
+
+        const formattedUsers = users.recordset.map(formatUser);
+
+        res.status(200).json({
+            success: true,
+            result: formattedUsers,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось получить информацию с сервера',
+        });
+    }
+});
+
+app.post('/user/', async (req, res) => {
+    try {
+        const { fio, url } = req.body.params;
+
+        await sql.connect(config);
+
+        const response = await sql.query`INSERT INTO Пользователь
+              (ФамилияИмя, СсылкаНаVk)
+             OUTPUT INSERTED.ID
+             VALUES (${fio}, ${url})`;
+
+        let userId;
+
+        if (response?.recordset?.[0]?.ID != null) {
+            userId = response.recordset[0].ID;
+        }
+
+        if (userId) {
+            res.status(201).json({
+                success: true,
+                result: userId,
+            });
+        } else {
+            throw new Error('Не удалось добавить пользователя');
+        }
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось отправить информацию на сервер',
+        });
+    }
+});
+
+app.put('/user/', async (req, res) => {
+    try {
+        const { id, url } = req.body.params;
+
+        await sql.connect(config);
+
+        const response = await sql.query`UPDATE Пользователь SET СсылкаНаVK = ${url}
+             WHERE ID = ${id}`;
+
+        const success = response.rowsAffected[0] > 0;
+
+        if (success) {
+            res.status(200).json({
+                success: true,
+                result: id,
+            });
+        } else {
+            throw new Error('Не удалось изменить пользователя');
+        }
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось отправить информацию на сервер',
+        });
+    }
+});
+
+app.get('/payments/', async (req, res) => {
+    try {
+        await sql.connect(config);
+
+        const payments = await sql.query(`SELECT ОплатаПодписки.ID, ДатаОплаты, ID_Пользователь,
+              Пользователь.ФамилияИмя, Пользователь.СсылкаНаVK, ОплатаПодписки.ID_Подписка,
+              Подписка.Название, (SELECT TOP 1 Стоимость FROM СтоимостьПодписки
+                      WHERE СтоимостьПодписки.ID_Подписка = Подписка.ID
+                        AND ДатаДобавленияСтоимости < ДатаОплаты
+                      ORDER BY ДатаДобавленияСтоимости DESC)
+                      AS Стоимость
+            FROM ОплатаПодписки
+            LEFT JOIN Пользователь ON ОплатаПодписки.ID_Пользователь = Пользователь.ID
+            LEFT JOIN Подписка ON Подписка.ID = ОплатаПодписки.ID_Подписка`);
+
+        const formatPayment = (payment) => ({
+            id: payment.ID,
+            date: payment.ДатаОплаты,
+            amount: payment.Стоимость,
+            userId: payment.ID_Пользователь,
+            fio: payment.ФамилияИмя,
+            url: payment.СсылкаНаVK,
+            subscriptionId: payment.ID_Подписка,
+            subscription: payment.Название,
+        });
+
+        const formattedPayments = payments.recordset.map(formatPayment);
+
+        res.status(200).json({
+            success: true,
+            result: formattedPayments,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось получить информацию с сервера',
+        });
+    }
+});
+
+app.post('/payment/', async (req, res) => {
+    try {
+        const { date, userId, subscriptionId } = req.body.params;
+
+        await sql.connect(config);
+
+        const response = await sql.query`INSERT INTO ОплатаПодписки
+              (ДатаОплаты, ID_Пользователь, ID_Подписка)
+             OUTPUT INSERTED.ID
+             VALUES (${date}, ${userId}, ${subscriptionId})`;
+
+        let paymentId;
+
+        if (response?.recordset?.[0]?.ID != null) {
+            paymentId = response.recordset[0].ID;
+        }
+
+        if (paymentId) {
+            res.status(201).json({
+                success: true,
+                result: paymentId,
+            });
+        } else {
+            throw new Error('Не удалось добавить оплату');
+        }
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось отправить информацию на сервер',
+        });
+    }
+});
+
+app.put('/payment/', async (req, res) => {
+    try {
+        const { id, date, userId, subscriptionId } = req.body.params;
+
+        await sql.connect(config);
+
+        const response = await sql.query`UPDATE ОплатаПодписки SET ДатаОплаты = ${date},
+                ID_Пользователь = ${userId}, ID_Подписка = ${subscriptionId}
+             WHERE ID = ${id}`;
+
+        const success = response.rowsAffected[0] > 0;
+
+        if (success) {
+            res.status(200).json({
+                success: true,
+                result: id,
+            });
+        } else {
+            throw new Error('Не удалось изменить оплату');
+        }
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось отправить информацию на сервер',
+        });
+    }
+});
+
+app.delete('/payment/', async (req, res) => {
+    try {
+        const { id } = req.query;
+
+        await sql.connect(config);
+
+        await sql.query(`DELETE FROM ОплатаПодписки WHERE ID = ${id}`);
+
+        res.status(200).json({
+            success: true,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось получить информацию с сервера',
+        });
+    }
+});
+
+app.get('/subscriptions/', async (req, res) => {
+    try {
+        await sql.connect(config);
+
+        const subscriptions = await sql.query(
+            `SELECT Подписка.ID, Подписка.Название, ID_ТипЗапроса,
+                  ТипЗапроса.Название AS ТипЗапроса,
+                  (SELECT TOP 1 Стоимость FROM СтоимостьПодписки
+                      WHERE СтоимостьПодписки.ID_Подписка = Подписка.ID
+                      ORDER BY ДатаДобавленияСтоимости DESC)
+                      AS Стоимость
+                FROM Подписка
+                LEFT JOIN ДоступныйТипЗапроса
+                  ON Подписка.ID = ДоступныйТипЗапроса.ID_Подписка
+                LEFT JOIN ТипЗапроса
+                  ON ТипЗапроса.ID = ДоступныйТипЗапроса.ID_ТипЗапроса
+                ORDER BY Подписка.ID, ID_ТипЗапроса`,
+        );
+
+        const subscriptionsGrouped = subscriptions.recordset.reduce((state, subscription) => {
+            const foundSubscription = state.find(
+                (subscriptionFind) => subscriptionFind.ID === subscription.ID,
+            );
+
+            if (foundSubscription && subscription.ID_ТипЗапроса) {
+                foundSubscription.ДоступныеТипыЗапросов.push({
+                    ID: subscription.ID_ТипЗапроса,
+                    Название: subscription.ТипЗапроса,
+                });
+
+                return state;
+            }
+
+            const { ID, Название, Стоимость } = subscription;
+
+            state.push({
+                ID,
+                Название,
+                Стоимость,
+                ДоступныеТипыЗапросов: subscription.ID_ТипЗапроса
+                    ? [
+                          {
+                              ID: subscription.ID_ТипЗапроса,
+                              Название: subscription.ТипЗапроса,
+                          },
+                      ]
+                    : [],
+            });
+
+            return state;
+        }, []);
+
+        const formatSubscription = (subscription) => ({
+            id: subscription.ID,
+            name: subscription.Название,
+            amount: subscription.Стоимость,
+            queryTypes: subscription.ДоступныеТипыЗапросов.map((queryType) => ({
+                id: queryType.ID,
+                name: queryType.Название,
+            })),
+        });
+
+        const formattedSubscriptions = subscriptionsGrouped.map(formatSubscription);
+
+        res.status(200).json({
+            success: true,
+            result: formattedSubscriptions,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось получить информацию с сервера',
+        });
+    }
+});
+
+app.post('/subscription/', async (req, res) => {
+    try {
+        const { name, amount, queryTypes } = req.body.params;
+
+        await sql.connect(config);
+
+        const response = await sql.query`INSERT INTO Подписка (Название)
+             OUTPUT INSERTED.ID
+             VALUES (${name})`;
+
+        let subscriptionId;
+
+        if (response?.recordset?.[0]?.ID != null) {
+            subscriptionId = response.recordset[0].ID;
+        }
+
+        if (subscriptionId) {
+            await sql.query`INSERT INTO СтоимостьПодписки (Стоимость,ID_Подписка)
+                    VALUES (${amount}, ${subscriptionId})`;
+
+            // eslint-disable-next-line no-restricted-syntax
+            for (const iQueryType of queryTypes) {
+                // eslint-disable-next-line no-await-in-loop
+                await sql.query(
+                    `INSERT INTO ДоступныйТипЗапроса (ID_Подписка, ID_ТипЗапроса)
+                         VALUES (${subscriptionId}, ${iQueryType.id})`,
+                );
+            }
+
+            res.status(201).json({
+                success: true,
+                result: subscriptionId,
+            });
+        } else {
+            throw new Error('Не удалось добавить подписку');
+        }
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось отправить информацию на сервер',
+        });
+    }
+});
+
+app.put('/subscription/', async (req, res) => {
+    try {
+        // const { id, name, amount, queryTypes } = req.body.params;
+        const [subscriptionNew, subscriptionOld] = req.body.params;
+
+        await sql.connect(config);
+
+        const response = await sql.query`UPDATE Подписка SET Название = ${subscriptionNew.name}
+             WHERE ID = ${subscriptionOld.id}`;
+
+        const success = response.rowsAffected[0] > 0;
+
+        if (success) {
+            if (
+                await sql.query`DELETE FROM ДоступныйТипЗапроса
+                  WHERE ID_Подписка = ${subscriptionOld.id}`
+            ) {
+                // eslint-disable-next-line no-restricted-syntax
+                for (const iQueryType of subscriptionNew.queryTypes) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await sql.query(
+                        `INSERT INTO ДоступныйТипЗапроса (ID_Подписка, ID_ТипЗапроса)
+                         VALUES (${subscriptionOld.id}, ${iQueryType.id})`,
+                    );
+                }
+            } else {
+                throw new Error('Не удалось удалить доступные типы запросов');
+            }
+
+            // eslint-disable-next-line eqeqeq
+            if (subscriptionNew.amount != subscriptionOld.amount) {
+                await sql.query`INSERT INTO СтоимостьПодписки (Стоимость,ID_Подписка)
+                    VALUES (${subscriptionNew.amount}, ${subscriptionOld.id})`;
+            }
+
+            res.status(200).json({
+                success: true,
+                result: subscriptionOld.id,
+            });
+        } else {
+            throw new Error('Не удалось изменить подписку');
+        }
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось отправить информацию на сервер',
+        });
+    }
+});
+
 app.put(
-    '/admin',
+    '/admin/',
     [
         check('id', 'Некорректный логин').isLength({ min: 1 }),
         check('newPassword', 'Некорректный пароль').isLength({ min: 6 }),
@@ -469,6 +951,109 @@ app.put(
         }
     },
 );
+
+app.get('/queriesReport/', async (req, res) => {
+    try {
+        const filters = req.query;
+
+        await sql.connect(config);
+
+        let whereStr = '';
+        if (filters.dateFromFilter && filters.dateToFilter) {
+            whereStr += ` AND ДатаЗапроса >= '${filters.dateFromFilter}' AND
+                ДатаЗапроса <= '${filters.dateToFilter}' `;
+        }
+
+        if (filters.queryTypeFilter) {
+            whereStr += ` AND ID_ТипЗапроса = ${filters.queryTypeFilter} `;
+        }
+
+        if (filters.userFilter) {
+            whereStr += ` AND ID_Пользователь = ${filters.userFilter} `;
+        }
+
+        const report = await sql.query(`SELECT Запрос.ID, ДатаЗапроса, КоличествоТреков,
+              ЗапрашиваемыйАвтор, ФамилияИмя, СсылкаНаVK, ТипЗапроса.Название AS ТипЗапроса,
+              Трек.Название AS Трек, ИмяАвтора
+            FROM Запрос
+            INNER JOIN Пользователь ON Запрос.ID_Пользователь = Пользователь.ID
+            ${whereStr}
+            LEFT JOIN ТипЗапроса ON Запрос.ID_ТипЗапроса = ТипЗапроса.ID
+            LEFT JOIN ПолученныйТрек ON Запрос.ID = ПолученныйТрек.ID_Запрос
+            LEFT JOIN Трек ON ПолученныйТрек.ID_Трек = Трек.ID
+            LEFT JOIN Автор ON Трек.ID_Автор = Автор.ID`);
+
+        const queriesGrouped = report.recordset.reduce((state, query) => {
+            const foundQuery = state.find((queryFind) => queryFind.ID === query.ID);
+
+            if (foundQuery && query.Трек) {
+                foundQuery.Треки.push({
+                    Трек: query.Трек,
+                    Автор: query.ИмяАвтора,
+                });
+
+                return state;
+            }
+
+            const {
+                ID,
+                ДатаЗапроса,
+                КоличествоТреков,
+                ЗапрашиваемыйАвтор,
+                ФамилияИмя,
+                СсылкаНаVK,
+                ТипЗапроса,
+            } = query;
+
+            state.push({
+                ID,
+                ДатаЗапроса,
+                КоличествоТреков,
+                ЗапрашиваемыйАвтор,
+                ФамилияИмя,
+                СсылкаНаVK,
+                ТипЗапроса,
+                Треки: query.Трек
+                    ? [
+                          {
+                              Трек: query.Трек,
+                              Автор: query.ИмяАвтора,
+                          },
+                      ]
+                    : [],
+            });
+
+            return state;
+        }, []);
+
+        const formatReport = (query) => ({
+            id: query.ID,
+            date: query.ДатаЗапроса,
+            countTracks: query.КоличествоТреков,
+            author: query.ЗапрашиваемыйАвтор,
+            fio: query.ФамилияИмя,
+            url: query.СсылкаНаVK,
+            queryType: query.ТипЗапроса,
+            tracks: query.Треки.map((track) => ({
+                name: track.Трек,
+                author: track.Автор,
+            })),
+        });
+
+        const formattedReport = queriesGrouped.map(formatReport);
+
+        res.status(200).json({
+            success: true,
+            result: formattedReport,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось получить информацию с сервера',
+        });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Backend Server has been started at http://localhost:${port}`);

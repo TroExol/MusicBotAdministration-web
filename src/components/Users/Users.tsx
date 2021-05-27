@@ -5,13 +5,8 @@ import { XGrid, GridColDef, GridRowSelectedParams } from '@material-ui/x-grid';
 import { useSnackbar } from 'notistack';
 
 import { renderCellExpand } from '../GridCellExpand/GridCellExpand';
-import CreateQueryType, { createQueryTypeFormType } from './CreateQueryType';
-import {
-    addQueryTypeAction,
-    getQueryTypesAction,
-    IQueryType,
-    updateQueryTypeAction,
-} from '../../store/queryTypes';
+import { addUserAction, getUsersAction, IUser, updateUserAction } from '../../store/users';
+import CreateUser, { createUserFormType } from './CreateUser';
 
 const useStyles = makeStyles({
     content: {
@@ -36,45 +31,51 @@ const useStyles = makeStyles({
 const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', type: 'number', renderCell: renderCellExpand },
     {
-        field: 'name',
-        headerName: 'Название',
-        flex: 1,
+        field: 'fio',
+        headerName: 'Фамилия и имя',
+        flex: 0.5,
+        renderCell: renderCellExpand,
+    },
+    {
+        field: 'url',
+        headerName: 'Ссылка на VK',
+        flex: 0.5,
         renderCell: renderCellExpand,
     },
 ];
 
-const QueryTypes = (): JSX.Element => {
+const Users = (): JSX.Element => {
     const classes = useStyles();
 
     const theme = useTheme();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    const [queryTypesState, setQueryTypesState] = useState<IQueryType[]>([]);
-    const [selectedQueryType, setSelectedQueryType] = useState<IQueryType | null>(null);
+    const [usersState, setUsersState] = useState<IUser[]>([]);
+    const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
     const [loading, setLoading] = useState(true);
     const [openCreateState, setOpenCreateState] = useState<boolean>(false);
     const [openEditState, setOpenEditState] = useState<boolean>(false);
 
-    const onSuccessCreateHandler = async (data: createQueryTypeFormType) => {
+    const onSuccessCreateHandler = async (data: createUserFormType) => {
         setOpenCreateState(() => false);
 
-        const { name } = data;
+        const { fio, url } = data;
 
-        const queryType = { id: -1, name };
+        const user = { id: -1, fio, url };
 
-        const queryTypeId = await addQueryTypeAction(queryType);
+        const userId = await addUserAction(user);
 
-        if (queryTypeId[0]) {
-            setQueryTypesState([...queryTypesState, { id: queryTypeId[1], name }]);
+        if (userId[0]) {
+            setUsersState([...usersState, { id: userId[1], fio, url }]);
 
-            const snackBar = enqueueSnackbar('Тип запроса успешно добавлен', {
+            const snackBar = enqueueSnackbar('Пользователь успешно добавлен', {
                 variant: 'success',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
             });
         } else {
-            const snackBar = enqueueSnackbar(queryTypeId[1], {
+            const snackBar = enqueueSnackbar(userId[1], {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -83,13 +84,13 @@ const QueryTypes = (): JSX.Element => {
     };
 
     const rowSelectionHandler = (row: GridRowSelectedParams) => {
-        const newState = row.data as IQueryType;
-        setSelectedQueryType(() => newState);
+        const newState = row.data as IUser;
+        setSelectedUser(() => newState);
     };
 
     const editQueryHandler = () => {
-        if (!selectedQueryType) {
-            const snackBar = enqueueSnackbar('Выберите 1 тип запроса', {
+        if (!selectedUser) {
+            const snackBar = enqueueSnackbar('Выберите 1 пользователя', {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -100,36 +101,34 @@ const QueryTypes = (): JSX.Element => {
         setOpenEditState(() => true);
     };
 
-    const onSuccessEditHandler = async (
-        data: createQueryTypeFormType,
-        queryType: IQueryType | undefined,
-    ) => {
+    const onSuccessEditHandler = async (data: createUserFormType, user: IUser | undefined) => {
         setOpenEditState(() => false);
 
-        const { name } = data;
+        const { fio, url } = data;
 
-        const updatedQueryType: IQueryType = {
-            id: (queryType as IQueryType).id,
-            name,
+        const updatedUser: IUser = {
+            id: (user as IUser).id,
+            fio,
+            url,
         };
 
-        const queryTypeId = await updateQueryTypeAction(updatedQueryType);
+        const userId = await updateUserAction(updatedUser);
 
-        if (queryTypeId[0]) {
-            const newState = queryTypesState.map((queryTypeState) =>
-                queryTypeState.id !== queryTypeId[1] ? queryTypeState : updatedQueryType,
+        if (userId[0]) {
+            const newState = usersState.map((userState) =>
+                userState.id !== userId[1] ? userState : updatedUser,
             );
 
-            setQueryTypesState(newState);
-            setSelectedQueryType(updatedQueryType);
+            setUsersState(newState);
+            setSelectedUser(updatedUser);
 
-            const snackBar = enqueueSnackbar('Тип запроса успешно изменен', {
+            const snackBar = enqueueSnackbar('Пользователь успешно изменен', {
                 variant: 'success',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
             });
         } else {
-            const snackBar = enqueueSnackbar(queryTypeId[1], {
+            const snackBar = enqueueSnackbar(userId[1], {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -138,22 +137,22 @@ const QueryTypes = (): JSX.Element => {
     };
 
     useEffect(() => {
-        getQueryTypesAction()
-            .then((queryTypes) => {
-                if (queryTypes[0]) {
-                    if (queryTypes[1].length <= 0) {
-                        throw new Error('Нет типов запросов');
+        getUsersAction()
+            .then((users) => {
+                if (users[0]) {
+                    if (users[1].length <= 0) {
+                        throw new Error('Нет пользователей');
                     }
                     setTimeout(() => {
-                        setQueryTypesState(queryTypes[1]);
+                        setUsersState(users[1]);
                         setLoading(false);
                     }, 0);
                 } else {
-                    throw new Error(queryTypes[1]);
+                    throw new Error(users[1]);
                 }
             })
             .catch((error) => {
-                setQueryTypesState([]);
+                setUsersState([]);
                 setLoading(false);
 
                 const snackBar = enqueueSnackbar(error.message, {
@@ -168,12 +167,12 @@ const QueryTypes = (): JSX.Element => {
     return (
         <div>
             <Typography variant="h5" component="h2" color="primary">
-                Типы запросов
+                Пользователи
             </Typography>
 
             <div className={classes.content}>
                 <XGrid
-                    rows={queryTypesState}
+                    rows={usersState}
                     columns={columns}
                     pageSize={5}
                     loading={loading}
@@ -206,8 +205,8 @@ const QueryTypes = (): JSX.Element => {
                         open={openCreateState}
                         onBackdropClick={() => setOpenCreateState(() => false)}
                     >
-                        <CreateQueryType
-                            title="Создание типа запроса"
+                        <CreateUser
+                            title="Создание пользователя"
                             onSuccessConfirm={onSuccessCreateHandler}
                         />
                     </Modal>
@@ -217,10 +216,10 @@ const QueryTypes = (): JSX.Element => {
                         open={openEditState}
                         onBackdropClick={() => setOpenEditState(() => false)}
                     >
-                        <CreateQueryType
-                            title="Изменение типа запроса"
+                        <CreateUser
+                            title="Изменение пользователя"
                             onSuccessConfirm={onSuccessEditHandler}
-                            user={selectedQueryType as IQueryType}
+                            user={selectedUser as IUser}
                         />
                     </Modal>
                 </div>
@@ -229,4 +228,4 @@ const QueryTypes = (): JSX.Element => {
     );
 };
 
-export default QueryTypes;
+export default Users;

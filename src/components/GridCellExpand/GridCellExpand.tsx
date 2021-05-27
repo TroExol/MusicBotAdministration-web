@@ -113,7 +113,7 @@ export const renderCellExpand = (
     params: GridValueFormatterParams,
     valueFormatter: valueFormatterType | null = null,
 ) => {
-    let value = params.value ? params.value.toString() : '';
+    let value = params.value != null ? params.value.toString() : '';
 
     if (valueFormatter) {
         value = valueFormatter(params);

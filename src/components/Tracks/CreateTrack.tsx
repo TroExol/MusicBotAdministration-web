@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography, TextField, Button, useTheme } from '@material-ui/core';
 import { createStyles, makeStyles } from '@material-ui/core/styles';
 import { useForm, Controller } from 'react-hook-form';
-import { IQueryType } from '../../store/queryTypes';
+import { ITrack } from '../../store/tracks';
 
 const useStyles = makeStyles((theme) => {
     return createStyles({
@@ -28,27 +28,28 @@ const useStyles = makeStyles((theme) => {
     });
 });
 
-export type createQueryTypeFormType = {
+export type createTrackFormType = {
     name: string;
+    author: string;
 };
 
 interface IProps {
     title: string;
-    onSuccessConfirm: (data: createQueryTypeFormType, query: IQueryType | undefined) => void;
+    onSuccessConfirm: (data: createTrackFormType, track: ITrack | undefined) => void;
     // eslint-disable-next-line react/require-default-props
-    user?: IQueryType;
+    track?: ITrack;
 }
 
-const CreateQueryType = (props: IProps): JSX.Element => {
-    const { title, onSuccessConfirm, user } = props;
+const CreateTrack = (props: IProps): JSX.Element => {
+    const { title, onSuccessConfirm, track } = props;
 
     const classes = useStyles();
     const theme = useTheme();
 
     const { handleSubmit, control, formState } = useForm();
 
-    const onSubmitHandler = (data: createQueryTypeFormType) => {
-        onSuccessConfirm(data, user);
+    const onSubmitHandler = (data: createTrackFormType) => {
+        onSuccessConfirm(data, track);
     };
 
     return (
@@ -72,7 +73,25 @@ const CreateQueryType = (props: IProps): JSX.Element => {
                 name="name"
                 control={control}
                 rules={{ required: { value: true, message: 'Введите название' } }}
-                defaultValue={user ? user.name : ''}
+                defaultValue={track ? track.name : ''}
+            />
+
+            <Controller
+                render={({ field }) => (
+                    <TextField
+                        className={classes.field}
+                        variant="outlined"
+                        label="Автор"
+                        error={!!formState.errors?.author?.message}
+                        helperText={formState.errors?.author?.message}
+                        // eslint-disable-next-line react/jsx-props-no-spreading
+                        {...field}
+                    />
+                )}
+                name="author"
+                control={control}
+                rules={{ required: { value: true, message: 'Введите автора' } }}
+                defaultValue={track ? track.author : ''}
             />
 
             <Button
@@ -87,4 +106,4 @@ const CreateQueryType = (props: IProps): JSX.Element => {
     );
 };
 
-export default CreateQueryType;
+export default CreateTrack;

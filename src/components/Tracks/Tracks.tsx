@@ -5,13 +5,8 @@ import { XGrid, GridColDef, GridRowSelectedParams } from '@material-ui/x-grid';
 import { useSnackbar } from 'notistack';
 
 import { renderCellExpand } from '../GridCellExpand/GridCellExpand';
-import CreateQueryType, { createQueryTypeFormType } from './CreateQueryType';
-import {
-    addQueryTypeAction,
-    getQueryTypesAction,
-    IQueryType,
-    updateQueryTypeAction,
-} from '../../store/queryTypes';
+import CreateTrack, { createTrackFormType } from './CreateTrack';
+import { addTrackAction, getTracksAction, ITrack, updateTrackAction } from '../../store/tracks';
 
 const useStyles = makeStyles({
     content: {
@@ -38,43 +33,49 @@ const columns: GridColDef[] = [
     {
         field: 'name',
         headerName: 'Название',
-        flex: 1,
+        flex: 0.5,
+        renderCell: renderCellExpand,
+    },
+    {
+        field: 'author',
+        headerName: 'Автор',
+        flex: 0.5,
         renderCell: renderCellExpand,
     },
 ];
 
-const QueryTypes = (): JSX.Element => {
+const Tracks = (): JSX.Element => {
     const classes = useStyles();
 
     const theme = useTheme();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    const [queryTypesState, setQueryTypesState] = useState<IQueryType[]>([]);
-    const [selectedQueryType, setSelectedQueryType] = useState<IQueryType | null>(null);
+    const [tracksState, setTracksState] = useState<ITrack[]>([]);
+    const [selectedTrack, setSelectedTrack] = useState<ITrack | null>(null);
     const [loading, setLoading] = useState(true);
     const [openCreateState, setOpenCreateState] = useState<boolean>(false);
     const [openEditState, setOpenEditState] = useState<boolean>(false);
 
-    const onSuccessCreateHandler = async (data: createQueryTypeFormType) => {
+    const onSuccessCreateHandler = async (data: createTrackFormType) => {
         setOpenCreateState(() => false);
 
-        const { name } = data;
+        const { name, author } = data;
 
-        const queryType = { id: -1, name };
+        const track = { id: -1, name, author };
 
-        const queryTypeId = await addQueryTypeAction(queryType);
+        const trackId = await addTrackAction(track);
 
-        if (queryTypeId[0]) {
-            setQueryTypesState([...queryTypesState, { id: queryTypeId[1], name }]);
+        if (trackId[0]) {
+            setTracksState([...tracksState, { id: trackId[1], name, author }]);
 
-            const snackBar = enqueueSnackbar('Тип запроса успешно добавлен', {
+            const snackBar = enqueueSnackbar('Трек успешно добавлен', {
                 variant: 'success',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
             });
         } else {
-            const snackBar = enqueueSnackbar(queryTypeId[1], {
+            const snackBar = enqueueSnackbar(trackId[1], {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -83,13 +84,13 @@ const QueryTypes = (): JSX.Element => {
     };
 
     const rowSelectionHandler = (row: GridRowSelectedParams) => {
-        const newState = row.data as IQueryType;
-        setSelectedQueryType(() => newState);
+        const newState = row.data as ITrack;
+        setSelectedTrack(() => newState);
     };
 
-    const editQueryHandler = () => {
-        if (!selectedQueryType) {
-            const snackBar = enqueueSnackbar('Выберите 1 тип запроса', {
+    const editTrackHandler = () => {
+        if (!selectedTrack) {
+            const snackBar = enqueueSnackbar('Выберите 1 трек', {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -100,36 +101,34 @@ const QueryTypes = (): JSX.Element => {
         setOpenEditState(() => true);
     };
 
-    const onSuccessEditHandler = async (
-        data: createQueryTypeFormType,
-        queryType: IQueryType | undefined,
-    ) => {
+    const onSuccessEditHandler = async (data: createTrackFormType, track: ITrack | undefined) => {
         setOpenEditState(() => false);
 
-        const { name } = data;
+        const { name, author } = data;
 
-        const updatedQueryType: IQueryType = {
-            id: (queryType as IQueryType).id,
+        const updatedTrack: ITrack = {
+            id: (track as ITrack).id,
             name,
+            author,
         };
 
-        const queryTypeId = await updateQueryTypeAction(updatedQueryType);
+        const trackId = await updateTrackAction(updatedTrack);
 
-        if (queryTypeId[0]) {
-            const newState = queryTypesState.map((queryTypeState) =>
-                queryTypeState.id !== queryTypeId[1] ? queryTypeState : updatedQueryType,
+        if (trackId[0]) {
+            const newState = tracksState.map((trackState) =>
+                trackState.id !== trackId[1] ? trackState : updatedTrack,
             );
 
-            setQueryTypesState(newState);
-            setSelectedQueryType(updatedQueryType);
+            setTracksState(newState);
+            setSelectedTrack(updatedTrack);
 
-            const snackBar = enqueueSnackbar('Тип запроса успешно изменен', {
+            const snackBar = enqueueSnackbar('Трек успешно изменен', {
                 variant: 'success',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
             });
         } else {
-            const snackBar = enqueueSnackbar(queryTypeId[1], {
+            const snackBar = enqueueSnackbar(trackId[1], {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -138,22 +137,22 @@ const QueryTypes = (): JSX.Element => {
     };
 
     useEffect(() => {
-        getQueryTypesAction()
-            .then((queryTypes) => {
-                if (queryTypes[0]) {
-                    if (queryTypes[1].length <= 0) {
-                        throw new Error('Нет типов запросов');
+        getTracksAction()
+            .then((tracks) => {
+                if (tracks[0]) {
+                    if (tracks[1].length <= 0) {
+                        throw new Error('Нет треков');
                     }
                     setTimeout(() => {
-                        setQueryTypesState(queryTypes[1]);
+                        setTracksState(tracks[1]);
                         setLoading(false);
                     }, 0);
                 } else {
-                    throw new Error(queryTypes[1]);
+                    throw new Error(tracks[1]);
                 }
             })
             .catch((error) => {
-                setQueryTypesState([]);
+                setTracksState([]);
                 setLoading(false);
 
                 const snackBar = enqueueSnackbar(error.message, {
@@ -168,12 +167,12 @@ const QueryTypes = (): JSX.Element => {
     return (
         <div>
             <Typography variant="h5" component="h2" color="primary">
-                Типы запросов
+                Треки
             </Typography>
 
             <div className={classes.content}>
                 <XGrid
-                    rows={queryTypesState}
+                    rows={tracksState}
                     columns={columns}
                     pageSize={5}
                     loading={loading}
@@ -196,7 +195,7 @@ const QueryTypes = (): JSX.Element => {
                         variant="contained"
                         color="primary"
                         style={{ color: theme.palette.secondary.light }}
-                        onClick={editQueryHandler}
+                        onClick={editTrackHandler}
                     >
                         Изменить
                     </Button>
@@ -206,8 +205,8 @@ const QueryTypes = (): JSX.Element => {
                         open={openCreateState}
                         onBackdropClick={() => setOpenCreateState(() => false)}
                     >
-                        <CreateQueryType
-                            title="Создание типа запроса"
+                        <CreateTrack
+                            title="Создание трека"
                             onSuccessConfirm={onSuccessCreateHandler}
                         />
                     </Modal>
@@ -217,10 +216,10 @@ const QueryTypes = (): JSX.Element => {
                         open={openEditState}
                         onBackdropClick={() => setOpenEditState(() => false)}
                     >
-                        <CreateQueryType
-                            title="Изменение типа запроса"
+                        <CreateTrack
+                            title="Изменение трека"
                             onSuccessConfirm={onSuccessEditHandler}
-                            user={selectedQueryType as IQueryType}
+                            track={selectedTrack as ITrack}
                         />
                     </Modal>
                 </div>
@@ -229,4 +228,4 @@ const QueryTypes = (): JSX.Element => {
     );
 };
 
-export default QueryTypes;
+export default Tracks;

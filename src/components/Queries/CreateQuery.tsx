@@ -72,7 +72,7 @@ const CreateQuery = (props: IProps): JSX.Element => {
             queryType: query ? `${query.queryTypeId},${query.queryType}` : '',
             tracks: query
                 ? query.tracks.map(
-                      (track) => `${track.id},${track.track},${track.authorId},${track.author}`,
+                      (track) => `${track.id},${track.name},${track.authorId},${track.author}`,
                   )
                 : [],
         },
@@ -325,9 +325,9 @@ const CreateQuery = (props: IProps): JSX.Element => {
                                 <MenuItem
                                     key={track.id}
                                     // eslint-disable-next-line max-len
-                                    value={`${track.id},${track.track},${track.authorId},${track.author}`}
+                                    value={`${track.id},${track.name},${track.authorId},${track.author}`}
                                 >
-                                    {`${track.author} ${track.track}`}
+                                    {`${track.author} ${track.name}`}
                                 </MenuItem>
                             ))}
                         </TextField>

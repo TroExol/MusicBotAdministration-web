@@ -32,7 +32,7 @@ export const getQueriesAction: getQueriesActionType = async () => {
 
         return [true, queries];
     } catch (e) {
-        return [false, 'Не удалось получить информацию с сервера'];
+        return [false, 'Не удалось получить запросы'];
     }
 };
 
@@ -58,7 +58,7 @@ export const addQueryAction: addQueryActionType = async (query) => {
 
         return [true, queryId];
     } catch (e) {
-        return [false, 'Не удалось отправить запрос на сервер'];
+        return [false, 'Не удалось добавить запрос'];
     }
 };
 
@@ -76,7 +76,7 @@ export const deleteQueryAction: deleteQueryActionType = async (id) => {
 
         return [true];
     } catch (e) {
-        return [false, 'Не удалось отправить запрос на сервер'];
+        return [false, 'Не удалось удалить запрос(ы)'];
     }
 };
 
@@ -94,6 +94,6 @@ export const updateQueryAction: addQueryActionType = async (query) => {
 
         return [true, queryId];
     } catch (e) {
-        return [false, 'Не удалось отправить запрос на сервер'];
+        return [false, 'Не удалось изменить запрос'];
     }
 };

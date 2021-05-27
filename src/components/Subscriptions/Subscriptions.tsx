@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from 'react';
 
 import { Button, makeStyles, Modal, Typography, useTheme } from '@material-ui/core';
-import { XGrid, GridColDef, GridRowSelectedParams } from '@material-ui/x-grid';
+import {
+    XGrid,
+    GridColDef,
+    GridValueFormatterParams,
+    GridRowSelectedParams,
+} from '@material-ui/x-grid';
 import { useSnackbar } from 'notistack';
 
 import { renderCellExpand } from '../GridCellExpand/GridCellExpand';
-import CreateQueryType, { createQueryTypeFormType } from './CreateQueryType';
+import { IQueryType } from '../../store/queryTypes';
 import {
-    addQueryTypeAction,
-    getQueryTypesAction,
-    IQueryType,
-    updateQueryTypeAction,
-} from '../../store/queryTypes';
+    addSubscriptionAction,
+    getSubscriptionsAction,
+    ISubscription,
+    updateSubscriptionAction,
+} from '../../store/subscriptions';
+import CreateSubscription, { createSubscriptionFormType } from './CreateSubscription';
 
 const useStyles = makeStyles({
     content: {
@@ -38,43 +44,72 @@ const columns: GridColDef[] = [
     {
         field: 'name',
         headerName: 'Название',
-        flex: 1,
+        width: 200,
         renderCell: renderCellExpand,
+    },
+    {
+        field: 'amount',
+        headerName: 'Стоимость, руб',
+        type: 'number',
+        width: 200,
+        renderCell: renderCellExpand,
+    },
+    {
+        field: 'queryTypes',
+        headerName: 'Доступные типы запросов',
+        width: 200,
+        sortable: false,
+        flex: 1,
+        renderCell: (params) =>
+            renderCellExpand(params, (parameters: GridValueFormatterParams) =>
+                (parameters.value as IQueryType[]).map((queryType) => queryType.name).join(', '),
+            ),
     },
 ];
 
-const QueryTypes = (): JSX.Element => {
+const Subscriptions = (): JSX.Element => {
     const classes = useStyles();
 
     const theme = useTheme();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    const [queryTypesState, setQueryTypesState] = useState<IQueryType[]>([]);
-    const [selectedQueryType, setSelectedQueryType] = useState<IQueryType | null>(null);
+    const [subscriptionsState, setSubscriptionsState] = useState<ISubscription[]>([]);
+    const [selectedSubscription, setSelectedSubscription] = useState<ISubscription | null>(null);
     const [loading, setLoading] = useState(true);
     const [openCreateState, setOpenCreateState] = useState<boolean>(false);
     const [openEditState, setOpenEditState] = useState<boolean>(false);
 
-    const onSuccessCreateHandler = async (data: createQueryTypeFormType) => {
+    const onSuccessCreateHandler = async (data: createSubscriptionFormType) => {
         setOpenCreateState(() => false);
 
-        const { name } = data;
+        const { name, amount, queryTypes } = data;
 
-        const queryType = { id: -1, name };
+        const subscription: ISubscription = {
+            id: -1,
+            name,
+            amount,
+            queryTypes: queryTypes.map((queryType: string) => ({
+                id: Number(queryType.split(',')[0]),
+                name: queryType.split(',')[1],
+            })),
+        };
 
-        const queryTypeId = await addQueryTypeAction(queryType);
+        const subscriptionId = await addSubscriptionAction(subscription);
 
-        if (queryTypeId[0]) {
-            setQueryTypesState([...queryTypesState, { id: queryTypeId[1], name }]);
+        if (subscriptionId[0]) {
+            setSubscriptionsState([
+                ...subscriptionsState,
+                { ...subscription, id: subscriptionId[1] },
+            ]);
 
-            const snackBar = enqueueSnackbar('Тип запроса успешно добавлен', {
+            const snackBar = enqueueSnackbar('Подписка успешно добавлена', {
                 variant: 'success',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
             });
         } else {
-            const snackBar = enqueueSnackbar(queryTypeId[1], {
+            const snackBar = enqueueSnackbar(subscriptionId[1], {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -83,13 +118,13 @@ const QueryTypes = (): JSX.Element => {
     };
 
     const rowSelectionHandler = (row: GridRowSelectedParams) => {
-        const newState = row.data as IQueryType;
-        setSelectedQueryType(() => newState);
+        const newState = row.data as ISubscription;
+        setSelectedSubscription(() => newState);
     };
 
     const editQueryHandler = () => {
-        if (!selectedQueryType) {
-            const snackBar = enqueueSnackbar('Выберите 1 тип запроса', {
+        if (!selectedSubscription) {
+            const snackBar = enqueueSnackbar('Выберите 1 подписку', {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -101,35 +136,43 @@ const QueryTypes = (): JSX.Element => {
     };
 
     const onSuccessEditHandler = async (
-        data: createQueryTypeFormType,
-        queryType: IQueryType | undefined,
+        data: createSubscriptionFormType,
+        subscription: ISubscription | undefined,
     ) => {
         setOpenEditState(() => false);
 
-        const { name } = data;
+        const { name, amount, queryTypes } = data;
 
-        const updatedQueryType: IQueryType = {
-            id: (queryType as IQueryType).id,
+        const updatedSubscription: ISubscription = {
+            id: (subscription as ISubscription).id,
             name,
+            amount,
+            queryTypes: queryTypes.map((queryType: string) => ({
+                id: Number(queryType.split(',')[0]),
+                name: queryType.split(',')[1],
+            })),
         };
 
-        const queryTypeId = await updateQueryTypeAction(updatedQueryType);
+        const subscriptionId = await updateSubscriptionAction(
+            updatedSubscription,
+            subscription as ISubscription,
+        );
 
-        if (queryTypeId[0]) {
-            const newState = queryTypesState.map((queryTypeState) =>
-                queryTypeState.id !== queryTypeId[1] ? queryTypeState : updatedQueryType,
+        if (subscriptionId[0]) {
+            const newState = subscriptionsState.map((queryState) =>
+                queryState.id !== subscriptionId[1] ? queryState : updatedSubscription,
             );
 
-            setQueryTypesState(newState);
-            setSelectedQueryType(updatedQueryType);
+            setSubscriptionsState(newState);
+            setSelectedSubscription(updatedSubscription);
 
-            const snackBar = enqueueSnackbar('Тип запроса успешно изменен', {
+            const snackBar = enqueueSnackbar('Подписка успешно изменена', {
                 variant: 'success',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
             });
         } else {
-            const snackBar = enqueueSnackbar(queryTypeId[1], {
+            const snackBar = enqueueSnackbar(subscriptionId[1], {
                 variant: 'error',
                 anchorOrigin: { horizontal: 'right', vertical: 'top' },
                 onClick: () => closeSnackbar(snackBar),
@@ -138,22 +181,22 @@ const QueryTypes = (): JSX.Element => {
     };
 
     useEffect(() => {
-        getQueryTypesAction()
-            .then((queryTypes) => {
-                if (queryTypes[0]) {
-                    if (queryTypes[1].length <= 0) {
-                        throw new Error('Нет типов запросов');
+        getSubscriptionsAction()
+            .then((subscriptions) => {
+                if (subscriptions[0]) {
+                    if (subscriptions[1].length <= 0) {
+                        throw new Error('Нет подписок');
                     }
                     setTimeout(() => {
-                        setQueryTypesState(queryTypes[1]);
+                        setSubscriptionsState(subscriptions[1]);
                         setLoading(false);
                     }, 0);
                 } else {
-                    throw new Error(queryTypes[1]);
+                    throw new Error(subscriptions[1]);
                 }
             })
             .catch((error) => {
-                setQueryTypesState([]);
+                setSubscriptionsState([]);
                 setLoading(false);
 
                 const snackBar = enqueueSnackbar(error.message, {
@@ -168,12 +211,12 @@ const QueryTypes = (): JSX.Element => {
     return (
         <div>
             <Typography variant="h5" component="h2" color="primary">
-                Типы запросов
+                Подписки
             </Typography>
 
             <div className={classes.content}>
                 <XGrid
-                    rows={queryTypesState}
+                    rows={subscriptionsState}
                     columns={columns}
                     pageSize={5}
                     loading={loading}
@@ -206,8 +249,8 @@ const QueryTypes = (): JSX.Element => {
                         open={openCreateState}
                         onBackdropClick={() => setOpenCreateState(() => false)}
                     >
-                        <CreateQueryType
-                            title="Создание типа запроса"
+                        <CreateSubscription
+                            title="Создание подписки"
                             onSuccessConfirm={onSuccessCreateHandler}
                         />
                     </Modal>
@@ -217,10 +260,10 @@ const QueryTypes = (): JSX.Element => {
                         open={openEditState}
                         onBackdropClick={() => setOpenEditState(() => false)}
                     >
-                        <CreateQueryType
-                            title="Изменение типа запроса"
+                        <CreateSubscription
+                            title="Изменение подписки"
                             onSuccessConfirm={onSuccessEditHandler}
-                            user={selectedQueryType as IQueryType}
+                            subscription={selectedSubscription as ISubscription}
                         />
                     </Modal>
                 </div>
@@ -229,4 +272,4 @@ const QueryTypes = (): JSX.Element => {
     );
 };
 
-export default QueryTypes;
+export default Subscriptions;

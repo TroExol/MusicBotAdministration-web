@@ -54,7 +54,7 @@ export const getAdministratorAction: getAdministratorActionType = async ({ login
             ? [true, administrator]
             : [false, 'Неправильно указаны данные авторизации'];
     } catch (e) {
-        return [false, 'Не удалось получить информацию с сервера'];
+        return [false, 'Не удалось получить информацию об администраторе'];
     }
 };
 
@@ -86,7 +86,7 @@ export const changePasswordAction: changePasswordActionType = async ({ id, newPa
 
         return [false, 'Не удалось обновить пароль'];
     } catch (e) {
-        return [false, 'Не удалось получить информацию с сервера'];
+        return [false, 'Не удалось обновить пароль'];
     }
 };
 

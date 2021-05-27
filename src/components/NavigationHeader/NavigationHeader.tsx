@@ -8,7 +8,7 @@ import {
     Theme,
     useTheme,
 } from '@material-ui/core';
-import { ArrowDropDownOutlined, HomeOutlined, TableChartOutlined } from '@material-ui/icons';
+import { ArrowDropDownOutlined, TableChartOutlined } from '@material-ui/icons';
 import { useHistory } from 'react-router-dom';
 
 import constants from '../../common/constants';
@@ -60,15 +60,6 @@ const NavigationHeader = (): JSX.Element => {
             <div className={classes.content}>
                 <div className={classes.routes}>
                     <Button
-                        color="primary"
-                        variant="contained"
-                        onClick={() => history.push('/')}
-                        style={{ color: theme.palette.secondary.light }}
-                    >
-                        <HomeOutlined />
-                    </Button>
-
-                    <Button
                         aria-controls="tables-menu"
                         aria-haspopup="true"
                         color="primary"
@@ -92,6 +83,7 @@ const NavigationHeader = (): JSX.Element => {
                         open={Boolean(tablesEl)}
                         onClose={handleTablesClose}
                     >
+                        <MenuItem onClick={() => history.push('/')}>Запросы</MenuItem>
                         <MenuItem onClick={() => history.push('/queryTypes')}>
                             Типы запросов
                         </MenuItem>

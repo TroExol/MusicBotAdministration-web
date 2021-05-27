@@ -4,6 +4,11 @@ import { Typography } from '@material-ui/core';
 
 import homeRoutes from './home';
 import queryTypesRoutes from './queryTypes';
+import subscriptionsRoutes from './subscriptions';
+import usersRoutes from './users';
+import paymentsRoutes from './payments';
+import tracksRoutes from './tracks';
+import queriesReportRoutes from './queriesReport';
 
 export interface IRouterObject {
     name: string;
@@ -12,7 +17,15 @@ export interface IRouterObject {
     RenderFn: () => JSX.Element;
 }
 
-export const allRoutes = [...homeRoutes, ...queryTypesRoutes];
+export const allRoutes = [
+    ...homeRoutes,
+    ...queryTypesRoutes,
+    ...subscriptionsRoutes,
+    ...usersRoutes,
+    ...paymentsRoutes,
+    ...tracksRoutes,
+    ...queriesReportRoutes,
+];
 
 const Routes = (): JSX.Element => {
     return (

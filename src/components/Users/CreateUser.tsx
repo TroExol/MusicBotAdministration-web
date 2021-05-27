@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography, TextField, Button, useTheme } from '@material-ui/core';
 import { createStyles, makeStyles } from '@material-ui/core/styles';
 import { useForm, Controller } from 'react-hook-form';
-import { IQueryType } from '../../store/queryTypes';
+import { IUser } from '../../store/users';
 
 const useStyles = makeStyles((theme) => {
     return createStyles({
@@ -28,18 +28,19 @@ const useStyles = makeStyles((theme) => {
     });
 });
 
-export type createQueryTypeFormType = {
-    name: string;
+export type createUserFormType = {
+    fio: string;
+    url: string;
 };
 
 interface IProps {
     title: string;
-    onSuccessConfirm: (data: createQueryTypeFormType, query: IQueryType | undefined) => void;
+    onSuccessConfirm: (data: createUserFormType, user: IUser | undefined) => void;
     // eslint-disable-next-line react/require-default-props
-    user?: IQueryType;
+    user?: IUser;
 }
 
-const CreateQueryType = (props: IProps): JSX.Element => {
+const CreateUser = (props: IProps): JSX.Element => {
     const { title, onSuccessConfirm, user } = props;
 
     const classes = useStyles();
@@ -47,7 +48,7 @@ const CreateQueryType = (props: IProps): JSX.Element => {
 
     const { handleSubmit, control, formState } = useForm();
 
-    const onSubmitHandler = (data: createQueryTypeFormType) => {
+    const onSubmitHandler = (data: createUserFormType) => {
         onSuccessConfirm(data, user);
     };
 
@@ -62,17 +63,36 @@ const CreateQueryType = (props: IProps): JSX.Element => {
                     <TextField
                         className={classes.field}
                         variant="outlined"
-                        label="Название"
-                        error={!!formState.errors?.name?.message}
-                        helperText={formState.errors?.name?.message}
+                        label="Фамилия и имя"
+                        disabled={!!user}
+                        error={!!formState.errors?.fio?.message}
+                        helperText={formState.errors?.fio?.message}
                         // eslint-disable-next-line react/jsx-props-no-spreading
                         {...field}
                     />
                 )}
-                name="name"
+                name="fio"
                 control={control}
-                rules={{ required: { value: true, message: 'Введите название' } }}
-                defaultValue={user ? user.name : ''}
+                rules={{ required: { value: !user, message: 'Введите фамилию и имя' } }}
+                defaultValue={user ? user.fio : ''}
+            />
+
+            <Controller
+                render={({ field }) => (
+                    <TextField
+                        className={classes.field}
+                        variant="outlined"
+                        label="Ссылка на VK"
+                        error={!!formState.errors?.url?.message}
+                        helperText={formState.errors?.url?.message}
+                        // eslint-disable-next-line react/jsx-props-no-spreading
+                        {...field}
+                    />
+                )}
+                name="url"
+                control={control}
+                rules={{ required: { value: true, message: 'Введите ссылку на VK' } }}
+                defaultValue={user ? user.url : ''}
             />
 
             <Button
@@ -87,4 +107,4 @@ const CreateQueryType = (props: IProps): JSX.Element => {
     );
 };
 
-export default CreateQueryType;
+export default CreateUser;
