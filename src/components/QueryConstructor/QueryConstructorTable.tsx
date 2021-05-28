@@ -69,7 +69,7 @@ const QueryConstructorTable = (props: IProps): JSX.Element => {
                         }
 
                         setTimeout(() => {
-                            setRowsState(rows[1]);
+                            setRowsState(() => rows[1]);
                             setLoading(() => false);
                         }, 0);
                     } else {

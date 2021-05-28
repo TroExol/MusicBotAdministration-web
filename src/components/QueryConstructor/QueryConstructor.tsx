@@ -185,7 +185,7 @@ const QueryConstructor = (): JSX.Element => {
         renderResult = ({ tree: immutableTree, config }) =>
             filters ? (
                 <div className="query-builder-result">
-                    Условие: <pre>{JSON.stringify(QbUtils.sqlFormat(immutableTree, config))}</pre>
+                    <pre>{JSON.stringify(QbUtils.sqlFormat(immutableTree, config))}</pre>
                 </div>
             ) : (
                 ''
@@ -294,7 +294,6 @@ const QueryConstructor = (): JSX.Element => {
             <Typography variant="h5" component="h2" color="primary">
                 Конструктор запросов
             </Typography>
-
             <div className={classes.content}>
                 <div className={classes.actions}>
                     <Controller
@@ -350,7 +349,14 @@ const QueryConstructor = (): JSX.Element => {
                 </div>
             </div>
 
-            <QueryBuilder />
+            {tablesState.length > 0 && selectedTableState ? (
+                <div>
+                    Условие:
+                    <QueryBuilder />
+                </div>
+            ) : (
+                ''
+            )}
 
             <Modal
                 className={classes.modal}
