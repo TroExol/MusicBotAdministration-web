@@ -12,22 +12,15 @@ import {
     useTheme,
 } from '@material-ui/core';
 import { useSnackbar } from 'notistack';
-import {
-    XGrid,
-    GridColDef,
-    GridToolbarContainer,
-    GridValueFormatterParams,
-} from '@material-ui/x-grid';
+import { XGrid, GridColDef, GridToolbarContainer } from '@material-ui/x-grid';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Workbook from 'react-excel-workbook';
 
 import { renderCellExpand } from '../GridCellExpand/GridCellExpand';
-import { ISOtoDateTime } from '../../utils/formatters';
-import { getQueriesReportAction, IQueriesReportRow } from '../../store/queriesReport';
 import { getUsersAction, IUser } from '../../store/users';
-import { getQueryTypesAction, IQueryType } from '../../store/queryTypes';
-import { ITrack } from '../../store/tracks';
+import { getProfitReportAction, IProfitReportRow } from '../../store/profitReport';
+import { getSubscriptionsAction, ISubscription } from '../../store/subscriptions';
 
 const useStyles = makeStyles({
     content: {
@@ -55,108 +48,84 @@ const useStyles = makeStyles({
 
 const columns: GridColDef[] = [
     {
-        field: 'id',
-        headerName: 'ID',
-        type: 'number',
-        renderCell: renderCellExpand,
-    },
-    {
         field: 'date',
-        headerName: 'Дата Запроса',
-        width: 190,
+        headerName: 'Дата оплаты',
+        flex: 0.25,
         type: 'dateTime',
-        renderCell: (params) =>
-            renderCellExpand(params, (parameters) => ISOtoDateTime(parameters.value as string)),
+        renderCell: renderCellExpand,
     },
     {
-        field: 'countTracks',
-        headerName: 'Количество треков',
+        field: 'subscription',
+        headerName: 'Подписка',
+        flex: 0.25,
+        renderCell: renderCellExpand,
+    },
+    {
+        field: 'countSubscriptions',
+        headerName: 'Количество подписок',
         type: 'number',
-        width: 200,
+        flex: 0.25,
         renderCell: renderCellExpand,
     },
     {
-        field: 'author',
-        headerName: 'Запрашиваемый автор',
-        width: 200,
+        field: 'profit',
+        headerName: 'Прибыль, руб.',
+        type: 'number',
+        flex: 0.25,
         renderCell: renderCellExpand,
-    },
-    {
-        field: 'fio',
-        headerName: 'Пользователь',
-        width: 190,
-        renderCell: renderCellExpand,
-    },
-    {
-        field: 'url',
-        headerName: 'Ссылка на пользователя',
-        width: 250,
-        renderCell: renderCellExpand,
-    },
-    {
-        field: 'queryType',
-        headerName: 'Тип запроса',
-        width: 180,
-        renderCell: renderCellExpand,
-    },
-    {
-        field: 'tracks',
-        headerName: 'Полученные треки',
-        width: 200,
-        sortable: false,
-        renderCell: (params) =>
-            renderCellExpand(params, (parameters: GridValueFormatterParams) =>
-                (parameters.value as ITrack[])
-                    .map((track) => `${track.author} ${track.name}`)
-                    .join(', '),
-            ),
     },
 ];
 
-const QueriesReport = (): JSX.Element => {
+const ProfitReport = (): JSX.Element => {
     const classes = useStyles();
 
     const theme = useTheme();
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    const [queriesState, setQueriesState] = useState<IQueriesReportRow[]>([]);
+    const [rowsState, setRowsState] = useState<IProfitReportRow[]>([]);
     const [loading, setLoading] = useState(true);
+
     const [usersState, setUsersState] = useState<IUser[]>([]);
-    const [queryTypesState, setQueryTypesState] = useState<IQueryType[]>([]);
+    const [subscriptionsState, setSubscriptionsState] = useState<ISubscription[]>([]);
+
     const [enableDateFilterState, setEnableDateFilterState] = useState(false);
     const [enableUserFilterState, setEnableUserFilterState] = useState(false);
-    const [enableQueryTypeFilterState, setEnableQueryTypeFilterState] = useState(false);
+    const [enableSubscriptionFilterState, setEnableSubscriptionFilterState] = useState(false);
+
     const [dateFilterState, setDateFilterState] = useState<[string?, string?]>([]);
     const [userFilterState, setUserFilterState] = useState<string | undefined>(undefined);
-    const [queryTypeFilterState, setQueryTypeFilterState] = useState<string | undefined>(undefined);
+    const [subscriptionFilterState, setSubscriptionFilterState] =
+        useState<string | undefined>(undefined);
 
     const memoLoadData = useCallback(() => {
         (async () => {
             setLoading(() => true);
 
-            await getQueriesReportAction({
+            await getProfitReportAction({
                 dateFromFilter: enableDateFilterState ? dateFilterState[0] : undefined,
                 dateToFilter: enableDateFilterState ? dateFilterState[1] : undefined,
                 userFilter: enableUserFilterState ? userFilterState : undefined,
-                queryTypeFilter: enableQueryTypeFilterState ? queryTypeFilterState : undefined,
+                subscriptionFilter: enableSubscriptionFilterState
+                    ? subscriptionFilterState
+                    : undefined,
             })
-                .then((queries) => {
-                    if (queries[0]) {
-                        if (queries[1].length <= 0) {
-                            throw new Error('Нет запросов');
+                .then((rows) => {
+                    if (rows[0]) {
+                        if (rows[1].length <= 0) {
+                            throw new Error('Нет данных');
                         }
                         setTimeout(() => {
-                            setQueriesState(queries[1]);
+                            setRowsState(rows[1]);
                             setLoading(false);
                         }, 0);
                     } else {
-                        throw new Error(queries[1]);
+                        throw new Error(rows[1]);
                     }
                 })
                 .catch((error) => {
                     setTimeout(() => {
-                        setQueriesState([]);
+                        setRowsState([]);
                         setLoading(false);
                     }, 0);
 
@@ -195,24 +164,24 @@ const QueriesReport = (): JSX.Element => {
                     });
             }
 
-            if (queryTypesState.length <= 0) {
-                await getQueryTypesAction()
-                    .then((queryTypes) => {
-                        if (queryTypes[0]) {
-                            if (queryTypes[1].length <= 0) {
-                                throw new Error('Нет типов запросов');
+            if (subscriptionsState.length <= 0) {
+                await getSubscriptionsAction()
+                    .then((subscription) => {
+                        if (subscription[0]) {
+                            if (subscription[1].length <= 0) {
+                                throw new Error('Нет подписок');
                             }
 
                             setTimeout(() => {
-                                setQueryTypesState(queryTypes[1]);
+                                setSubscriptionsState(subscription[1]);
                             }, 0);
                         } else {
-                            throw new Error(queryTypes[1]);
+                            throw new Error(subscription[1]);
                         }
                     })
                     .catch((error) => {
                         setTimeout(() => {
-                            setQueryTypesState([]);
+                            setSubscriptionsState([]);
                         }, 0);
 
                         const snackBar = enqueueSnackbar(error.message, {
@@ -228,10 +197,10 @@ const QueriesReport = (): JSX.Element => {
     }, [
         enableDateFilterState,
         enableUserFilterState,
-        enableQueryTypeFilterState,
+        enableSubscriptionFilterState,
         dateFilterState,
         userFilterState,
-        queryTypeFilterState,
+        subscriptionFilterState,
     ]);
 
     // eslint-disable-next-line
@@ -241,10 +210,10 @@ const QueriesReport = (): JSX.Element => {
         [
             enableDateFilterState,
             enableUserFilterState,
-            enableQueryTypeFilterState,
+            enableSubscriptionFilterState,
             dateFilterState,
             userFilterState,
-            queryTypeFilterState,
+            subscriptionFilterState,
         ],
     );
 
@@ -270,12 +239,12 @@ const QueriesReport = (): JSX.Element => {
         setUserFilterState(() => newState);
     };
 
-    const onQueryTypeChangeHandler = (
+    const onSubscriptionChangeHandler = (
         data: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
     ) => {
         const newState = data.target.value;
 
-        setQueryTypeFilterState(() => newState);
+        setSubscriptionFilterState(() => newState);
     };
 
     const Toolbar = () => (
@@ -383,9 +352,9 @@ const QueriesReport = (): JSX.Element => {
 
                 <FormGroup row style={{ alignItems: 'center' }}>
                     <Switch
-                        checked={enableQueryTypeFilterState}
+                        checked={enableSubscriptionFilterState}
                         onChange={() =>
-                            setEnableQueryTypeFilterState(() => !enableQueryTypeFilterState)
+                            setEnableSubscriptionFilterState(() => !enableSubscriptionFilterState)
                         }
                     />
                     <TextField
@@ -393,24 +362,24 @@ const QueriesReport = (): JSX.Element => {
                         select
                         size="small"
                         variant="outlined"
-                        label="Тип запроса"
-                        disabled={!enableQueryTypeFilterState || queryTypesState.length <= 0}
+                        label="Подписка"
+                        disabled={!enableSubscriptionFilterState || subscriptionsState.length <= 0}
                         name="queryType"
-                        value={queryTypeFilterState}
-                        onChange={onQueryTypeChangeHandler}
-                        error={enableQueryTypeFilterState && !queryTypeFilterState}
+                        value={subscriptionFilterState}
+                        onChange={onSubscriptionChangeHandler}
+                        error={enableSubscriptionFilterState && !subscriptionFilterState}
                         helperText={
-                            enableQueryTypeFilterState &&
-                            !queryTypeFilterState &&
-                            'Выберите тип запроса'
+                            enableSubscriptionFilterState &&
+                            !subscriptionFilterState &&
+                            'Выберите подписку'
                         }
                     >
-                        {queryTypesState.map((queryType) => (
+                        {subscriptionsState.map((subscription) => (
                             <MenuItem
-                                key={queryType.id}
-                                value={`${queryType.id},${queryType.name}`}
+                                key={subscription.id}
+                                value={`${subscription.id},${subscription.name}`}
                             >
-                                {queryType.name}
+                                {subscription.name}
                             </MenuItem>
                         ))}
                     </TextField>
@@ -422,19 +391,10 @@ const QueriesReport = (): JSX.Element => {
     );
 
     const ExportButton = () => {
-        const convertToExcelFormat = (queries: IQueriesReportRow[]) => {
-            return queries.map((query) => ({
-                ...query,
-                date: ISOtoDateTime(query.date),
-                queryType: query.queryType,
-                tracks: query.tracks.map((track) => `${track.author} ${track.name}`).join(', '),
-            }));
-        };
-
         return (
             <GridToolbarContainer>
                 <Workbook
-                    filename="Отчет по запросам.xlsx"
+                    filename="Отчет по прибыли.xlsx"
                     element={
                         <Button
                             color="primary"
@@ -445,18 +405,11 @@ const QueriesReport = (): JSX.Element => {
                         </Button>
                     }
                 >
-                    <Workbook.Sheet
-                        data={convertToExcelFormat(queriesState)}
-                        name="Отчет по запросам"
-                    >
-                        <Workbook.Column label="ID" value="id" />
-                        <Workbook.Column label="Дата запроса" value="date" />
-                        <Workbook.Column label="Количество треков" value="countTracks" />
-                        <Workbook.Column label="Запрашиваемый автор" value="author" />
-                        <Workbook.Column label="Пользователь" value="fio" />
-                        <Workbook.Column label="Ссылка на VK" value="url" />
-                        <Workbook.Column label="Тип запроса" value="queryType" />
-                        <Workbook.Column label="Полученные треки" value="tracks" />
+                    <Workbook.Sheet data={rowsState} name="Отчет по прибыли">
+                        <Workbook.Column label="Дата оплаты" value="date" />
+                        <Workbook.Column label="Подписка" value="subscription" />
+                        <Workbook.Column label="Куплено подписок" value="countSubscriptions" />
+                        <Workbook.Column label="Прибыль" value="profit" />
                     </Workbook.Sheet>
                 </Workbook>
             </GridToolbarContainer>
@@ -466,12 +419,12 @@ const QueriesReport = (): JSX.Element => {
     return (
         <div>
             <Typography variant="h5" component="h2" color="primary">
-                Запросы
+                Прибыль ({rowsState.length > 0 ? rowsState[rowsState.length - 1].profit : 0} руб.)
             </Typography>
 
             <div className={classes.content}>
                 <XGrid
-                    rows={queriesState}
+                    rows={rowsState}
                     columns={columns}
                     pageSize={5}
                     loading={loading}
@@ -491,4 +444,4 @@ const QueriesReport = (): JSX.Element => {
     );
 };
 
-export default QueriesReport;
+export default ProfitReport;

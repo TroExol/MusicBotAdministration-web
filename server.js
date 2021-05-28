@@ -1055,6 +1055,220 @@ app.get('/queriesReport/', async (req, res) => {
     }
 });
 
+app.get('/profitReport/', async (req, res) => {
+    try {
+        const filters = req.query;
+
+        await sql.connect(config);
+
+        let whereStr = '';
+        if (filters.dateFromFilter && filters.dateToFilter) {
+            whereStr += ` AND ДатаОплаты >= '${filters.dateFromFilter}' AND
+                ДатаОплаты <= '${filters.dateToFilter}' `;
+        }
+
+        if (filters.subscriptionFilter) {
+            whereStr += ` AND ID_Подписка = ${filters.subscriptionFilter} `;
+        }
+
+        if (filters.userFilter) {
+            whereStr += ` AND ID_Пользователь = ${filters.userFilter} `;
+        }
+
+        const report = await sql.query(`SELECT ISNULL(CONVERT(CHAR(10),ДатаОплаты,104),
+              'Итог') AS ДатаОплаты, ISNULL(Подписка.Название, 'Итог') AS Подписка,
+               Count(Подписка.ID) AS КолвоПодписок, sum(Стоимость) AS Прибыль
+            FROM ОплатаПодписки
+            INNER JOIN Подписка ON ОплатаПодписки.ID_Подписка = Подписка.ID
+            ${whereStr}
+            OUTER APPLY (
+                Select TOP 1 *
+                From СтоимостьПодписки
+                WHERE СтоимостьПодписки.ID_Подписка = Подписка.ID
+            AND ДатаДобавленияСтоимости <= ДатаОплаты
+            ORDER BY ДатаДобавленияСтоимости DESC
+                ) Стоимость
+            GROUP BY CONVERT(CHAR(10), ДатаОплаты, 104), Подписка.Название WITH ROLLUP
+            ORDER BY CONVERT(DATETIME, CONVERT(CHAR(10), ДатаОплаты, 104), 104) DESC`);
+
+        const formatReport = (query) => ({
+            id: query.ID,
+            date: query.ДатаОплаты,
+            subscription: query.Подписка,
+            countSubscriptions: query.КолвоПодписок,
+            profit: query.Прибыль,
+        });
+
+        const formattedReport = report.recordset.map(formatReport);
+
+        res.status(200).json({
+            success: true,
+            result: formattedReport,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось получить информацию с сервера',
+        });
+    }
+});
+
+app.get('/queryTypesReport/', async (req, res) => {
+    try {
+        const filters = req.query;
+
+        await sql.connect(config);
+
+        let whereStr = '';
+        if (filters.dateFromFilter && filters.dateToFilter) {
+            whereStr += ` AND ДатаЗапроса >= '${filters.dateFromFilter}' AND
+                ДатаЗапроса <= '${filters.dateToFilter}' `;
+        }
+
+        const report = await sql.query(`SELECT ТипЗапроса.Название,
+              COUNT(Запрос.ID_ТипЗапроса) AS Количество
+            FROM Запрос
+            INNER JOIN ТипЗапроса ON Запрос.ID_ТипЗапроса = ТипЗапроса.ID
+            ${whereStr}
+            GROUP BY ТипЗапроса.Название ORDER BY Количество DESC`);
+
+        const formatReport = (query) => ({
+            name: query.Название,
+            count: query.Количество,
+        });
+
+        const formattedReport = report.recordset.map(formatReport);
+
+        res.status(200).json({
+            success: true,
+            result: formattedReport,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось получить информацию с сервера',
+        });
+    }
+});
+
+app.get('/usersReport/', async (req, res) => {
+    try {
+        const filters = req.query;
+
+        await sql.connect(config);
+
+        let whereStr = '';
+        if (filters.dateFromFilter && filters.dateToFilter) {
+            whereStr += ` AND ДатаЗапроса >= '${filters.dateFromFilter}' AND
+                ДатаЗапроса <= '${filters.dateToFilter}' `;
+        }
+
+        const report = await sql.query(`SELECT ФамилияИмя, СсылкаНаVK,
+              COUNT(Запрос.ID_Пользователь) AS КолвоЗапросов
+            FROM Запрос
+            INNER JOIN Пользователь ON Запрос.ID_Пользователь = Пользователь.ID
+            ${whereStr}
+            GROUP BY ФамилияИмя, СсылкаНаVK ORDER BY КолвоЗапросов DESC`);
+
+        const formatReport = (query) => ({
+            fio: query.ФамилияИмя,
+            url: query.СсылкаНаVK,
+            count: query.КолвоЗапросов,
+        });
+
+        const formattedReport = report.recordset.map(formatReport);
+
+        res.status(200).json({
+            success: true,
+            result: formattedReport,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось получить информацию с сервера',
+        });
+    }
+});
+
+app.get('/tables/', async (req, res) => {
+    try {
+        await sql.connect(config);
+
+        const tables = await sql.query(`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_NAME != 'sysdiagrams'`);
+
+        const formattedTables = tables.recordset.map((table) => table.TABLE_NAME);
+
+        res.status(200).json({
+            success: true,
+            result: formattedTables,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось получить информацию с сервера',
+        });
+    }
+});
+
+app.get('/columns/', async (req, res) => {
+    try {
+        const { table } = req.query;
+
+        await sql.connect(config);
+
+        const columns =
+            await sql.query(`SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_NAME = '${table}'`);
+
+        const formattedColumns = columns.recordset.map((column) => ({
+            name: column.COLUMN_NAME,
+            type: column.DATA_TYPE,
+        }));
+
+        res.status(200).json({
+            success: true,
+            result: formattedColumns,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось получить информацию с сервера',
+        });
+    }
+});
+
+app.get('/sql/', async (req, res) => {
+    try {
+        const { table, columns, filters } = req.query;
+
+        await sql.connect(config);
+
+        const where = filters ? ` WHERE ${filters}` : '';
+        const columnsRes = columns?.length ? columns.join(',') : '*';
+
+        const query = await sql.query(`SELECT ${columnsRes} FROM ${table} ${where}`);
+
+        const formattedQuery = query.recordset;
+
+        res.status(200).json({
+            success: true,
+            result: formattedQuery,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            message: 'Не удалось получить информацию с сервера',
+        });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Backend Server has been started at http://localhost:${port}`);
 });

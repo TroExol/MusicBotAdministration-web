@@ -260,8 +260,10 @@ const Payments = (): JSX.Element => {
                 }
             })
             .catch((error) => {
-                setPaymentsState([]);
-                setLoading(false);
+                setTimeout(() => {
+                    setPaymentsState([]);
+                    setLoading(false);
+                }, 0);
 
                 const snackBar = enqueueSnackbar(error.message, {
                     variant: 'error',

@@ -152,8 +152,10 @@ const Users = (): JSX.Element => {
                 }
             })
             .catch((error) => {
-                setUsersState([]);
-                setLoading(false);
+                setTimeout(() => {
+                    setUsersState([]);
+                    setLoading(false);
+                }, 0);
 
                 const snackBar = enqueueSnackbar(error.message, {
                     variant: 'error',

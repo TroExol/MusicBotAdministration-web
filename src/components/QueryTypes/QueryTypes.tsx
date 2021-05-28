@@ -153,8 +153,10 @@ const QueryTypes = (): JSX.Element => {
                 }
             })
             .catch((error) => {
-                setQueryTypesState([]);
-                setLoading(false);
+                setTimeout(() => {
+                    setQueryTypesState([]);
+                    setLoading(false);
+                }, 0);
 
                 const snackBar = enqueueSnackbar(error.message, {
                     variant: 'error',

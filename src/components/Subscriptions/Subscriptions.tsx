@@ -196,8 +196,10 @@ const Subscriptions = (): JSX.Element => {
                 }
             })
             .catch((error) => {
-                setSubscriptionsState([]);
-                setLoading(false);
+                setTimeout(() => {
+                    setSubscriptionsState([]);
+                    setLoading(false);
+                }, 0);
 
                 const snackBar = enqueueSnackbar(error.message, {
                     variant: 'error',

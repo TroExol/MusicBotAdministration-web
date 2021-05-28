@@ -46,6 +46,7 @@ const NavigationHeader = (): JSX.Element => {
     const history = useHistory();
 
     const [tablesEl, setTablesEl] = useState<null | HTMLElement>(null);
+    const [reportsEl, setReportsEl] = useState<null | HTMLElement>(null);
 
     const handleTablesClick = (event: MouseEvent<HTMLButtonElement>) => {
         setTablesEl(() => event.currentTarget);
@@ -53,6 +54,14 @@ const NavigationHeader = (): JSX.Element => {
 
     const handleTablesClose = () => {
         setTablesEl(() => null);
+    };
+
+    const handleReportsClick = (event: MouseEvent<HTMLButtonElement>) => {
+        setReportsEl(() => event.currentTarget);
+    };
+
+    const handleReportsClose = () => {
+        setReportsEl(() => null);
     };
 
     return (
@@ -83,15 +92,131 @@ const NavigationHeader = (): JSX.Element => {
                         open={Boolean(tablesEl)}
                         onClose={handleTablesClose}
                     >
-                        <MenuItem onClick={() => history.push('/')}>Запросы</MenuItem>
-                        <MenuItem onClick={() => history.push('/queryTypes')}>
+                        <MenuItem
+                            onClick={() => {
+                                history.push('/');
+                                handleTablesClose();
+                            }}
+                        >
+                            Запросы
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => {
+                                history.push('/queryTypes');
+                                handleTablesClose();
+                            }}
+                        >
                             Типы запросов
                         </MenuItem>
-                        <MenuItem onClick={() => history.push('/subscriptions')}>Подписки</MenuItem>
-                        <MenuItem onClick={() => history.push('/users')}>Пользователи</MenuItem>
-                        <MenuItem onClick={() => history.push('/payments')}>Оплаты</MenuItem>
-                        <MenuItem onClick={() => history.push('/tracks')}>Треки</MenuItem>
+                        <MenuItem
+                            onClick={() => {
+                                history.push('/subscriptions');
+                                handleTablesClose();
+                            }}
+                        >
+                            Подписки
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => {
+                                history.push('/users');
+                                handleTablesClose();
+                            }}
+                        >
+                            Пользователи
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => {
+                                history.push('/payments');
+                                handleTablesClose();
+                            }}
+                        >
+                            Оплаты
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => {
+                                history.push('/tracks');
+                                handleTablesClose();
+                            }}
+                        >
+                            Треки
+                        </MenuItem>
                     </Menu>
+
+                    <Button
+                        aria-controls="reports-menu"
+                        aria-haspopup="true"
+                        color="primary"
+                        variant="contained"
+                        onClick={handleReportsClick}
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            color: theme.palette.secondary.light,
+                        }}
+                    >
+                        <TableChartOutlined />
+                        &nbsp;Отчеты
+                        <ArrowDropDownOutlined />
+                    </Button>
+
+                    <Menu
+                        id="reports-menu"
+                        anchorEl={reportsEl}
+                        keepMounted
+                        open={Boolean(reportsEl)}
+                        onClose={handleReportsClose}
+                    >
+                        <MenuItem
+                            onClick={() => {
+                                history.push('/queriesReport');
+                                handleReportsClose();
+                            }}
+                        >
+                            Запросы
+                        </MenuItem>
+
+                        <MenuItem
+                            onClick={() => {
+                                history.push('/profitReport');
+                                handleReportsClose();
+                            }}
+                        >
+                            Прибыль
+                        </MenuItem>
+
+                        <MenuItem
+                            onClick={() => {
+                                history.push('/queryTypesReport');
+                                handleReportsClose();
+                            }}
+                        >
+                            Популярность типов запросов
+                        </MenuItem>
+
+                        <MenuItem
+                            onClick={() => {
+                                history.push('/usersReport');
+                                handleReportsClose();
+                            }}
+                        >
+                            Активность пользователей
+                        </MenuItem>
+                    </Menu>
+
+                    <Button
+                        color="primary"
+                        variant="contained"
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            color: theme.palette.secondary.light,
+                        }}
+                        onClick={() => {
+                            history.push('/queryConstructor');
+                        }}
+                    >
+                        Конструктор
+                    </Button>
                 </div>
 
                 <Administrator />

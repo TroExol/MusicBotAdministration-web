@@ -152,8 +152,10 @@ const Tracks = (): JSX.Element => {
                 }
             })
             .catch((error) => {
-                setTracksState([]);
-                setLoading(false);
+                setTimeout(() => {
+                    setTracksState([]);
+                    setLoading(false);
+                }, 0);
 
                 const snackBar = enqueueSnackbar(error.message, {
                     variant: 'error',

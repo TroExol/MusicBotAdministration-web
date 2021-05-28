@@ -17,6 +17,12 @@ export const URLS = {
     payments: `${baseServerUrl}/payments`,
     payment: `${baseServerUrl}/payment`,
     queriesReport: `${baseServerUrl}/queriesReport`,
+    profitReport: `${baseServerUrl}/profitReport`,
+    queryTypesReport: `${baseServerUrl}/queryTypesReport`,
+    usersReport: `${baseServerUrl}/usersReport`,
+    tables: `${baseServerUrl}/tables`,
+    columns: `${baseServerUrl}/columns`,
+    sql: `${baseServerUrl}/sql`,
 };
 
 export default { CONTENT_WIDTH, URLS };

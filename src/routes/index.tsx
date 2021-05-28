@@ -9,6 +9,10 @@ import usersRoutes from './users';
 import paymentsRoutes from './payments';
 import tracksRoutes from './tracks';
 import queriesReportRoutes from './queriesReport';
+import profitReportRoutes from './profitReport';
+import queryTypesReportRoutes from './queryTypesReport';
+import usersReportRoutes from './usersReport';
+import queryConstructorRoutes from './queryConstructor';
 
 export interface IRouterObject {
     name: string;
@@ -25,6 +29,10 @@ export const allRoutes = [
     ...paymentsRoutes,
     ...tracksRoutes,
     ...queriesReportRoutes,
+    ...profitReportRoutes,
+    ...queryTypesReportRoutes,
+    ...usersReportRoutes,
+    ...queryConstructorRoutes,
 ];
 
 const Routes = (): JSX.Element => {

@@ -304,8 +304,10 @@ const Queries = (): JSX.Element => {
                 }
             })
             .catch((error) => {
-                setQueriesState([]);
-                setLoading(false);
+                setTimeout(() => {
+                    setQueriesState([]);
+                    setLoading(false);
+                }, 0);
 
                 const snackBar = enqueueSnackbar(error.message, {
                     variant: 'error',
