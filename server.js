@@ -1198,7 +1198,7 @@ app.get('/tables/', async (req, res) => {
         await sql.connect(config);
 
         const tables = await sql.query(`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_NAME != 'sysdiagrams'`);
+            WHERE TABLE_NAME != 'sysdiagrams' AND TABLE_NAME != 'Администратор'`);
 
         const formattedTables = tables.recordset.map((table) => table.TABLE_NAME);
 
